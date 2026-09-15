@@ -12,7 +12,7 @@ runs a playbook nobody can trace back to a version.
 | 1 | Nothing → a versioned, reviewed baseline every host is born from | Kickstart `%packages`/`%post` · Image Builder blueprints | RHEL Image Builder (`osbuild-composer`) | osbuild (same project); Packer; a repacked ISO with preseed/cloud-init (the author's 🔨) | 🔨 lab — Image Builder, run 2026-09-15 · Kickstart 🔨 (RHCE) | [1](../phases/1-gold-image/) |
 | 2 | Upstream content → a version hosts are pinned to | sync → **content view version** → promote through **lifecycle environments** → host pinned by activation key | Red Hat Satellite (Katello + Pulp) | Foreman + Katello; Uyuni; **by hand: `reposync` + `createrepo_c` + a symlink per environment** | 🔨 lab — by hand, this tier | [2](../phases/2-content-lifecycle/) |
 | 3 | A serial number → an installed, registered host | Capsule DHCP/TFTP/DNS · host group · Kickstart template · activation key | Satellite provisioning (Foreman) | Cobbler; the author's own PXE chain (dnsmasq + TFTP + preseed) 🔨 | ⛔ · PXE chain 🔨 (prior) | [3](../phases/3-provisioning/) |
-| 4 | Errata published → hosts patched, compliance proven | errata filters in a content view · remote execution · OpenSCAP policy | Satellite errata + REX; Insights advisor; compliance | `dnf updateinfo` · Ansible · `oscap` (same project) | 🔨 lab — errata by hand (phase 2); OpenSCAP 🧭 | [4](../phases/4-patch-errata-compliance/) |
+| 4 | Errata published → hosts patched, compliance proven | errata filters in a content view · remote execution · OpenSCAP policy | Satellite errata + REX; Insights advisor; compliance | `dnf updateinfo` · Ansible · `oscap` (same project) | 🔨 lab — errata by hand (phase 2), one advisory applied, CIS L1 scanned, fixed, tailored (run 2026-09-15) | [4](../phases/4-patch-errata-compliance/) |
 | 5 | A playbook on one laptop → automation with an owner, a record and a permission model | job templates · credentials · RBAC · schedules · execution environments | Ansible Automation Platform | AWX (controller upstream) · ansible-core · Galaxy · `ansible-runner` · playbooks from a control node (the author's 🔨) | ⛔ · playbooks 🔨 (prior) | [5](../phases/5-automation/) |
 | 6 | Hosts → a platform (VMs, images, networks on demand) | overcloud/undercloud · director · Nova/Neutron/Cinder | Red Hat OpenStack Services on OpenShift (RHOSO, formerly RHOSP) | OpenStack via RDO / DevStack / Kolla; OpenShift ↔ OKD; RHV ↔ oVirt (both winding down) | ⛔ | [6](../phases/6-platform/) |
 | 7 | A Satellite server → one that survives its own upgrades | `satellite-maintain` · Capsule sync · backup/restore · database | Satellite operations | `foreman-maintain` (same tool) | ⛔ | [7](../phases/7-satellite-operations/) |
@@ -23,7 +23,7 @@ author's prior work, on Ubuntu and CentOS-era estates — see the footing table 
 mapped and doc-checked, not run. ⛔ = specified in full, deliberately not run, reason stated
 (ADR-0001). Three hops are ⛔ because the product that owns them runs only on x86_64 and the
 minimum tier is Apple silicon; [docs/02](02-lab-tiers.md) names the machine that would move each.
-Phases 0 and 1 ran the day a developer subscription was registered on the tier.
+Phases 0, 1 and 4 ran the day a developer subscription was registered on the tier.
 
 ## What the next hop assumes about the previous one
 

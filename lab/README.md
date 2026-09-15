@@ -13,6 +13,9 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `phase1-check.sh` | the nine checks from inside a host booted from the image; exit 1 on a miss |
 | `phase1.log` | the build, then both boots — the first with the VM tool's provisioning (SELinux left permissive), the second without (all nine ok) |
 | `gold-boot.yaml` | the Lima template that boots a built image with the VM tool's containerd provisioning off |
+| `phase4.sh` | CIS L1 baseline scan → one rule fixed → a tailoring for one exception → the generated playbook → one advisory applied by id → `needs-restarting` |
+| `phase4.log` | that run |
+| `tailoring-lab-cis-l1.xml` | the 614-byte tailoring `autotailor` wrote: one rule unselected, profile `lab_cis_l1` extending CIS L1 Server |
 | `phase2.sh` | library sync → custom RPM → content view versions → environments → a pinned host → an erratum → promotion → rollback |
 | `phase2.log` | the output of that run, unedited except the account name (`lab-user`) and the home path (`~`); with an addendum for the two findings verified separately |
 | `lab-hello.spec` | the custom package's spec, as it stood after the second build (version 1.1) |

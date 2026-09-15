@@ -42,11 +42,15 @@ from inside (`lab/phase1-check.sh`). Two findings: the VM tool's first-boot prov
 SELinux permissive on the first boot (`lab/gold-boot.yaml` keeps it off the baseline); first
 boot's hostname wins over the image's. `lab/phase1.sh`, `lab/phase1.log`, `lab/rhel9-base.toml`.
 
-### 5. Phase 4 — the OpenSCAP half
+### 5. ✅ Phase 4 — the OpenSCAP half, and one advisory — **run 2026-09-15**
 
-`oscap xccdf eval` with the SCAP Security Guide's CIS profile and a tailoring file on the tier;
-one rule flipped from fail to pass by a change; the generated remediation playbook. Moves the
-*proving* half from ⛔ to 🔨 lab.
+CIS Level 1 Server on the RHEL VM as phases 0 and 1 left it: fail 109 / pass 151; `MaxAuthTries`
+fixed and re-scanned (108); `partition_for_tmp` tailored out with `autotailor` (107, `notselected`);
+the remediation playbook generated for the profile (1,714 tasks) and from this host's results
+(961); `RHSA-2026:58572` applied by id, `--all` shows it `i`, `needs-restarting -r` = 0. Three
+findings: the image is not the baseline; advisories vs package rows are different units (93 vs
+326); the tailoring file is the audit artefact. `lab/phase4.sh`, `lab/phase4.log`,
+`lab/tailoring-lab-cis-l1.xml`.
 
 ### 6. The first 🔨 ledger rows — 2.4 and 2.6
 
