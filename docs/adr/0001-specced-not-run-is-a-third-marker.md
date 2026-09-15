@@ -18,8 +18,9 @@ platform (phase 6) are specified to the point where a reader with the mid tier c
 the tier is named in docs/02. Buying a machine to close a marker is the wrong order of
 operations. Phase 0 was ⛔ for a few hours on the day the repository was written — the
 subscription and support workflow runs on aarch64 and needs only a free developer account, which
-did not exist that morning and did that afternoon; it is 🔨 lab now. Phase 1's Image Builder
-path and phase 4's OpenSCAP scan are ⛔ the same way: runnable here, not yet run, next.
+did not exist that morning and did that afternoon; it is 🔨 lab now, and phase 1's Image
+Builder path followed it the same day. Phase 4's OpenSCAP scan is ⛔ the same way: runnable
+here, not yet run, next.
 
 ## 🔨 lab — the difference from 🔨
 

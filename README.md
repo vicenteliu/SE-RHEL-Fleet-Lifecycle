@@ -55,7 +55,8 @@ Markers, not adjectives. The legend is [below](#honesty-markers); the test behin
 | ⛔ | **Ansible Automation Platform / AWX** — the controller never operated; what it adds over the 🔨 line above is stated exactly in [phase 5](phases/5-automation/) |
 | ⛔ | **OpenStack** in any form — specified, not run on any tier here |
 | 🔨 lab | **`subscription-manager`, Insights, `sos`** — [phase 0](phases/0-subscription-and-support/) on a RHEL 9.8 aarch64 VM under a developer subscription: registered with an activation key, entitled content, 93 advisories counted, Insights registered, an 11 MB `sos report` inspected; two things the first run broke on, recorded |
-| 🧭 | **Image Builder**, **OpenSCAP** — runnable here, not yet run; next in TODO |
+| 🔨 lab | **Image Builder** — [phase 1](phases/1-gold-image/): one blueprint, 249 packages depsolved against entitled content, a 10 GiB `qcow2` in 139 s, booted, nine checks from inside; the first boot found the VM tool's provisioner had left SELinux permissive |
+| 🧭 | **OpenSCAP** — runnable here, not yet run; next in TODO |
 
 Everything above is stated at the depth the phases state it, and no deeper. The number behind
 *"a couple of hundred"* and the organisations behind the estates are exactly the details
@@ -71,7 +72,7 @@ full table with what each hop assumes about the previous one.
 | # | Hop | Product · upstream | State |
 |---|---|---|---|
 | 0 | Subscription → an entitled, supported host | RHEL subscription, Insights, the Customer Portal · none | **🔨 lab** |
-| 1 | Nothing → a baseline every host is born from | Image Builder · osbuild, Packer, a repacked ISO | 🧭 · Kickstart 🔨 (RHCE) · Ubuntu version 🔨 |
+| 1 | Nothing → a baseline every host is born from | Image Builder · osbuild, Packer, a repacked ISO | **🔨 lab** (Image Builder) · Kickstart 🔨 (RHCE) · Ubuntu version 🔨 |
 | 2 | Upstream content → a version hosts are pinned to | Satellite (Katello + Pulp) · Foreman + Katello · Uyuni · **by hand** | **🔨 lab** |
 | 3 | A serial number → an installed, registered host | Satellite provisioning · Foreman, Cobbler, a self-built PXE chain | ⛔ · PXE chain 🔨 (prior) |
 | 4 | Errata → hosts patched, compliance proven | Satellite errata + REX, Insights · `dnf updateinfo`, Ansible, OpenSCAP | 🔨 lab (errata) · ⛔ (scan) |
@@ -90,7 +91,7 @@ produce it; a script appears only where one was run.
 | Phase | The one thing to take from it |
 |---|---|
 | [0 · subscription and support](phases/0-subscription-and-support/) | A fleet where `sos report` is a mystery has no support contract in practice, whatever the invoice says. **Run here.** `insights-client --status` right after `--register` unregisters the host — the inventory has not caught up; wait, then verify |
-| [1 · gold image](phases/1-gold-image/) | The fleet's differences stop at the image; a change is a diff someone approved and the version records it |
+| [1 · gold image](phases/1-gold-image/) | The fleet's differences stop at the image; a change is a diff someone approved and the version records it. **Run here.** What the first-boot provisioner does to the baseline is part of the baseline — check from inside the booted host, never from the image's config |
 | [2 · content and lifecycle](phases/2-content-lifecycle/) | A content view version is a snapshot with its own metadata; an environment is a pointer; a host is pinned to a pointer and never sees the library. **Run here.** Two findings: a rollback behind the same URL is invisible until the host's metadata cache expires — including the non-root user's own cache; and `updateinfo list` counts what a host is *owed*, not what an environment *published* |
 | [3 · provisioning](phases/3-provisioning/) | The host group decides everything before the box is unpacked; the report-back is what makes a machine that hung a row instead of an absence |
 | [4 · patch, errata, compliance](phases/4-patch-errata-compliance/) | Promote, then apply, per environment — the promotion is the control; and compliance is proven by a scan, not by the patch log |
@@ -140,7 +141,7 @@ says which one it is.
 | [`docs/04-what-an-interviewer-asks.md`](docs/04-what-an-interviewer-asks.md) | Per hop: the questions, what a good answer contains, the mistake, where the evidence is |
 | [`docs/adr/`](docs/adr/) | Decisions that would otherwise look arbitrary |
 | [`phases/`](phases/) | One runbook per phase |
-| [`lab/`](lab/) | `phase0.sh`, `phase2.sh` and their logs, the Lima template for the RHEL image, the spec file and the erratum — what ran, byte for byte; `agent-runs/` and `check_secrets.sh` for the ledger |
+| [`lab/`](lab/) | `phase0.sh`, `phase1.sh` + `phase1-check.sh`, `phase2.sh` and their logs; the blueprint; the Lima templates for the RHEL image and for booting a built image; the spec file and the erratum — what ran, byte for byte; `agent-runs/` and `check_secrets.sh` for the ledger |
 | [`AGENT_BOUNDARY.md`](AGENT_BOUNDARY.md) | The ledger: where a model acts and where a person decides, a dated model line per row tried |
 | [`EXPLAIN.md`](EXPLAIN.md) | The same chain with zero jargon — and a stated test for whether it worked |
 | [`DISCLOSURE.md`](DISCLOSURE.md) | What this repository deliberately does not contain |

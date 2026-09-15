@@ -1,0 +1,14 @@
+# Lima template that boots an image built by phase 1, with the VM tool's own first-boot
+# provisioning kept off the baseline: Lima's containerd installer runs `setenforce 0` and, when
+# its install fails, never restores it — the booted host was Permissive while the image was
+# Enforcing (lab/phase1.log, boot 1). Boot the image, not the harness.
+#   limactl start --name gold1 --cpus 2 --memory 2 --tty=false lab/gold-boot.yaml
+minimumLimaVersion: 2.0.0
+images:
+- location: "~/.lima/_images/rhel9-base-2026.9.15.qcow2"
+  arch: "aarch64"
+containerd:
+  system: false
+  user: false
+base:
+- template:_default/mounts

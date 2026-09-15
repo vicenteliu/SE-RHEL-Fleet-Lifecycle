@@ -1,0 +1,33 @@
+# The minimum baseline, as a blueprint: one package the fleet standard adds, one hardening
+# setting that bakes, the agent that registers, a file that says which version this host was
+# born from, and a kernel argument the policy asks for. Versioned like the fleet's images.
+name = "rhel9-base"
+description = "Minimum RHEL 9 baseline for the lab tier: tmux, insights-client, sshd hardening, image-version file"
+version = "2026.9.15"
+
+[[packages]]
+name = "tmux"
+
+[[packages]]
+name = "insights-client"
+
+[[packages]]
+name = "cloud-init"
+
+[customizations]
+hostname = "gold-lab"
+
+[customizations.kernel]
+append = "audit=1"
+
+[customizations.services]
+enabled = ["chronyd", "sshd"]
+
+[[customizations.files]]
+path = "/etc/image-version"
+data = "rhel9-base 2026.9.15\n"
+
+[[customizations.files]]
+path = "/etc/ssh/sshd_config.d/50-baseline.conf"
+data = "PasswordAuthentication no\nPermitRootLogin no\n"
+mode = "0600"

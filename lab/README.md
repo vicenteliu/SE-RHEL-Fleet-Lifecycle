@@ -8,6 +8,11 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `rhel-lab.yaml` | the Lima template that boots the RHEL 9.8 aarch64 KVM Guest Image (not redistributable; download it yourself) |
 | `phase0.sh` | register with an activation key → entitled repositories → errata counted and one named → Insights registered (with the wait) → `sos report` produced and inspected. Reads the organisation id and key name from the environment, never from a file |
 | `phase0.log` | that run, with the organisation id, account number and consumer UUIDs replaced |
+| `rhel9-base.toml` | phase 1's blueprint — the minimum baseline, versioned |
+| `phase1.sh` | push → depsolve → compose to `qcow2` → download → checksum → metadata, on the registered RHEL VM |
+| `phase1-check.sh` | the nine checks from inside a host booted from the image; exit 1 on a miss |
+| `phase1.log` | the build, then both boots — the first with the VM tool's provisioning (SELinux left permissive), the second without (all nine ok) |
+| `gold-boot.yaml` | the Lima template that boots a built image with the VM tool's containerd provisioning off |
 | `phase2.sh` | library sync → custom RPM → content view versions → environments → a pinned host → an erratum → promotion → rollback |
 | `phase2.log` | the output of that run, unedited except the account name (`lab-user`) and the home path (`~`); with an addendum for the two findings verified separately |
 | `lab-hello.spec` | the custom package's spec, as it stood after the second build (version 1.1) |

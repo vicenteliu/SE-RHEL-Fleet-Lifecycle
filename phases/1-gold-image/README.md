@@ -4,9 +4,10 @@
 `%post`) for *install-it*; Image Builder blueprints for *build-it*. **Product:** RHEL Image
 Builder (`osbuild-composer`, `composer-cli`, the hosted builder). **Upstream:** osbuild — the
 same project; Packer; a repacked installer ISO with an answer file and a first-boot hook.
-**State: ⛔ Specced-Not-Run on this tier for Image Builder (runnable on aarch64; next hop in
-[TODO.md](../../TODO.md)) · Kickstart 🔨 at RHCE level, not a fleet · the author's Ubuntu
-version of the method 🔨 in production for years — see the footing table.**
+**State: 🔨 lab for the build-it route — one blueprint built to a `qcow2` on the registered RHEL
+VM on 2026-09-15, booted, and checked from inside; every command and its output in
+[`lab/phase1.log`](../../lab/phase1.log) · Kickstart 🔨 at RHCE level, not a fleet · the author's
+Ubuntu version of the method 🔨 in production for years — see the footing table.**
 
 The problem: hosts installed by hand differ in ways nobody can list, and the differences turn
 into faults six months later that nobody can explain. A gold image makes *how every host came to
@@ -16,18 +17,25 @@ image version, not a hundred hand edits. The fleet's differences stop at the ima
 ## Before you start
 
 - **Host**: a RHEL-family machine to build on — Image Builder runs on the OS it builds for (Rocky
-  9 builds Rocky 9 images; RHEL builds RHEL with entitled content). This tier: the Rocky 9
-  aarch64 VM, `osbuild-composer` and `composer-cli` from AppStream. Building x86_64 images needs
-  an x86_64 builder.
+  9 builds Rocky 9 images; RHEL builds RHEL with entitled content). This run: the **registered RHEL
+  9.8 aarch64 VM from phase 0**, `osbuild-composer` 165 and `weldr-client` 35 (the package that
+  provides `composer-cli`) from AppStream, resolving against the two entitled repositories.
+  Building x86_64 images needs an x86_64 builder.
 - **Content**: the repositories the image will draw from — on a fleet, an environment from
   phase 2, never the library; the blueprint's package list resolves against them at build time.
 - **A definition under version control**: the blueprint (TOML) or the Kickstart file. The image
-  has a name and a version (`rhel9-base-2026.09`); its source is a commit.
+  has a name and a version; its source is a commit. This run's: [`lab/rhel9-base.toml`](../../lab/rhel9-base.toml),
+  `rhel9-base 2026.9.15` — two packages the standard adds (`tmux`, `insights-client`),
+  `cloud-init` named explicitly, an `sshd_config.d` drop-in that bakes two hardening settings, a
+  kernel argument, two services enabled, a hostname, and `/etc/image-version` with the name and
+  version in it.
 
 ## Permissions
 
-- The `weldr` group for `composer-cli`; root for the `osbuild-composer` socket and for
-  Kickstart-driven installs.
+- The `weldr` group for `composer-cli`, or `sudo` (this run); root for the `osbuild-composer`
+  socket and for Kickstart-driven installs. The downloaded image is owned by whoever ran the
+  download — `sudo composer-cli compose image` leaves a root-owned file, which is the first thing
+  the run tripped on.
 - Outbound to the repositories the blueprint names. Nothing else.
 - Whoever can merge a change to the blueprint can change every future host. That is a review
   gate, not a permission bit.
@@ -81,6 +89,20 @@ to do both becomes a snowflake factory with extra steps.
 
 ## How the phase fails
 
+Two of these came out of the run.
+
+- **What the first-boot provisioner does to the baseline is part of the baseline.** The image
+  was built `SELINUX=enforcing`; the booted host was `Permissive`. The VM tool's own first-boot
+  script ran `setenforce 0` *"temporarily, during installing containerd units"*, its install
+  failed midway, and *"Restoring SELinux"* never ran (`journalctl -b`: zero matches). Booted
+  again with that provisioning switched off (`lab/gold-boot.yaml`): `Enforcing`. The check is
+  from inside the booted host, never from the image's configuration file — and whatever runs at
+  first boot (cloud-init, the platform's agent, a VM tool) is reviewed like a line in the
+  blueprint, because it can undo one.
+- **First boot wins over the image for anything both set.** The blueprint said `hostname =
+  "gold-lab"`; the kernel log shows `gold-lab` for eleven seconds and then cloud-init's name. By
+  design — the image is the start, first-boot hand-off is the rest — but a baseline that relies
+  on the image for something cloud-init also manages will lose quietly.
 - An image with a repository URL hard-coded is a host pinned to nothing (phase 2) from birth.
 - A baseline whose hardening lives in a script that runs at first boot rather than in the image
   drifts on the hosts where the script failed silently; bake what can be baked.
@@ -91,21 +113,42 @@ to do both becomes a snowflake factory with extra steps.
 
 ## Verify
 
-| | Command | Expected · tier |
+Per hop, the command and what the run produced ([`lab/phase1.log`](../../lab/phase1.log)); the
+inside-the-image rows are [`lab/phase1-check.sh`](../../lab/phase1-check.sh), which exits 1 on
+any miss.
+
+| | Command | Seen |
 |---|---|---|
-| 2 | `composer-cli compose status` | `FINISHED` with the blueprint name and version · minimum |
-| 2 | `composer-cli compose image <uuid>` · boot it | a `qcow2` that boots to a login · minimum (Lima can boot a `qcow2`) |
-| 3 | inside: `rpm -q <package>` · `sshd -T \| grep <setting>` · `getenforce` | the package, the setting, `Enforcing` · minimum |
-| 3 | inside: `cat /etc/image-version` (a file the blueprint writes) | the image's name and version · minimum |
-| 1 | a Kickstart install with `%post` registering to an environment; after boot `dnf repolist` | only the environment's repositories · mid (needs phase 3's provisioning server) |
-| 4 | after first boot: the host appears in the automation inventory and has converged | the host's report in phase 5's job history · mid |
+| 2 | `composer-cli blueprints push` · `depsolve` | `blueprint: rhel9-base v2026.9.15` · **249 packages** depsolved against the entitled repositories |
+| 2 | `composer-cli compose start rhel9-base qcow2` · `compose status` | `FINISHED` after **139 s** (257 s on the first build of the day, before the package cache) |
+| 2 | `composer-cli compose image <uuid>` · `qemu-img info` · `sha256sum` | `1,192,034,304` bytes · `file format: qcow2` · `virtual size: 10 GiB` · one sha256 |
+| 2 | `composer-cli compose metadata <uuid>` | one JSON of everything that went in — the manifest an audit asks for |
+| 3 | boot it under Lima; inside: `cat /etc/image-version` | `rhel9-base 2026.9.15` |
+| 3 | inside: `rpm -q tmux insights-client` | both present |
+| 3 | inside: `sshd -T \| grep -i passwordauthentication` · `permitrootlogin` | `no` · `no` — from the drop-in the blueprint wrote |
+| 3 | inside: `grep -w audit=1 /proc/cmdline` · `systemctl is-enabled chronyd` | present · `enabled` |
+| 3 | inside: `getenforce` | **`Permissive` on the first boot, `Enforcing` on the second** — see *How the phase fails*, first bullet |
+| 3 | inside: `uname -r` | `5.14.0-687.48.1.el9_8` — newer than the KVM guest image's `687.5.3`: the blueprint resolved against today's content, so the host is born at today's patch level |
+| 4 | inside: `subscription-manager identity` | not registered — birth is not registration; the hand-off is the next hop |
+| 1 | a Kickstart install with `%post` registering to an environment; after boot `dnf repolist` | only the environment's repositories · **mid** (needs phase 3's provisioning server) — ⛔ |
+| 4 | after first boot: the host appears in the automation inventory and has converged | the host's report in phase 5's job history · **mid** — ⛔ |
 
 ## Acceptance
 
 🔴 **A host booted from the image can say which version it was born from, and two hosts born
-from it differ only in hostname and keys.** ⛔ Not run on this tier yet; the blueprint path is
-runnable here and is the next hop. Not claimed: any RHEL image with entitled content (needs
-phase 0), any x86_64 image, an edge/ostree image, a fleet born from any of it.
+from it differ only in hostname and keys.**
+
+```
+  ok   image version file        rhel9-base 2026.9.15
+  ok   package from blueprint    ok   agent from blueprint
+  ok   sshd: no password auth    ok   sshd: no root login
+  ok   kernel arg from blueprint ok   chronyd enabled
+  ok   SELinux enforcing         ok   not registered (birth is not registration)
+```
+
+✅ Met for one image booted once (twice — the first boot is the finding). ⛔ Not claimed: a
+second host from the same image and the diff between them, an x86_64 image, an edge/ostree
+image, an installer ISO, the Kickstart route on a fleet, a fleet born from any of it.
 
 ## Rollback
 

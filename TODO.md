@@ -34,10 +34,13 @@ an activation key. Phase 0's verification table has *seen* values; two findings 
 `insights-client --status` race after `--register`; `subscription-manager` needing root even to
 read). `lab/phase0.sh`, `lab/phase0.log`.
 
-### 4. Phase 1 — Image Builder on the tier
+### 4. ✅ Phase 1 — Image Builder on the tier — **run 2026-09-15**
 
-`osbuild-composer` + `composer-cli` on the Rocky VM: one blueprint, one `qcow2`, booted under
-Lima, the two checks from inside. Moves the *build-it* route from ⛔ to 🔨 lab.
+On the registered RHEL VM rather than the Rocky one, so the blueprint resolved against entitled
+content: one blueprint, 249 packages, a 10 GiB `qcow2` in 139 s, booted under Lima, nine checks
+from inside (`lab/phase1-check.sh`). Two findings: the VM tool's first-boot provisioner left
+SELinux permissive on the first boot (`lab/gold-boot.yaml` keeps it off the baseline); first
+boot's hostname wins over the image's. `lab/phase1.sh`, `lab/phase1.log`, `lab/rhel9-base.toml`.
 
 ### 5. Phase 4 — the OpenSCAP half
 
