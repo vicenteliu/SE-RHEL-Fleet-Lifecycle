@@ -3,10 +3,10 @@
 **Hop:** a subscription → an entitled, supported host. **Mechanism:** `subscription-manager` ·
 `insights-client` · `sos report` · a support case with the right attachments. **Product:** the
 RHEL subscription, Red Hat Insights, the Customer Portal. **Upstream:** none — a Rocky or Alma
-host has the OS and none of this. **State: ⛔ Specced-Not-Run — the minimum tier has no Red Hat
-account yet.** The commands below are the real ones; the expected outputs are from the
-documentation, marked so, and will be replaced by seen ones the day a developer subscription
-(free, sixteen systems) is registered on the tier. That is first in [TODO.md](../../TODO.md).
+host has the OS and none of this. **State: 🔨 lab — run on 2026-09-15 on a RHEL 9.8 aarch64 VM
+under a developer subscription, every command and its output in [`lab/phase0.log`](../../lab/phase0.log).**
+The run took three attempts to get a clean log, and the two things that broke the first two are
+in *How the phase fails* because they will break a reader's first run too.
 
 Why this is hop 0 and not an appendix: everything downstream assumes the host can reach
 entitled content and that, when it breaks, someone can build the case that gets it fixed. A
@@ -15,17 +15,26 @@ says.
 
 ## Before you start
 
-- **Host**: RHEL 9 or 10 (the developer subscription's images; aarch64 exists). Rocky/Alma cannot
-  do this phase — that is the point of the phase.
+- **Host**: RHEL 9 or 10. This run: the RHEL 9.8 **KVM Guest Image** for aarch64 from the Customer
+  Portal (1.2 GB, checksum on the download page), booted under Lima with
+  [`lab/rhel-lab.yaml`](../../lab/rhel-lab.yaml). Rocky/Alma cannot do this phase — that is the
+  point of the phase.
 - **An account** on the Customer Portal with a subscription attached; for a lab, the Red Hat
-  Developer Subscription for Individuals.
+  Developer Subscription for Individuals (free). The image download is what attaches it.
+- **An activation key**, made once in the Hybrid Cloud Console (Inventory → System Configuration →
+  Activation Keys → *Create*; name, workload *Latest release*, system purpose left undefined) or
+  through the RHSM API (`POST /api/rhsm/v2/activation_keys`). The organisation id is on that page.
+  Neither is a secret, and neither is in this repository: the script reads both from the
+  environment.
 - **Network**: outbound HTTPS to `subscription.rhsm.redhat.com`, `cdn.redhat.com`,
   `cert-api.access.redhat.com` (Insights). Behind a proxy, `subscription-manager config
   --server.proxy_hostname` before anything else.
 
 ## Permissions
 
-- Root on the host for registration and for `sos`.
+- Root on the host for registration and for `sos` — **and for every `subscription-manager`
+  read**: as an ordinary user, `subscription-manager status` opens a polkit prompt for a password
+  and fails without a terminal. The first run stopped there. Everything in this phase is `sudo`.
 - On the portal side, an **activation key** is the right credential for a fleet — it carries the
   environment, the content view (Satellite) or the repositories to enable, and never the
   account password. A username/password registration is for one person's one machine.
@@ -103,6 +112,18 @@ engineer will link it first.
 
 ## How the phase fails
 
+Two of these came out of the run.
+
+- **`insights-client --status` run right after `--register` reports *NOT registered* and
+  removes the local registration.** On the first run: `--register` uploaded successfully,
+  `--status` a few seconds later said `Insights API says this machine is NOT registered` and
+  wrote `.unregistered` — the inventory had not processed the upload yet, and the client treats
+  the API's answer as authoritative. 120 seconds later the same check says `Insights API
+  confirms registration`. A fleet automation that registers and verifies in one step will
+  unregister every host it touches; wait, then verify (the script now does).
+- **`subscription-manager` as a non-root user prompts for a password through polkit and fails
+  without a terminal.** Even `status` and `identity`. The first run stopped on
+  `repos --list-enabled` for that reason; every call is `sudo` now.
 - A host registered with a username stays entitled through that person's account; when they
   leave, it does not. Activation keys exist so that entitlement is a property of the fleet.
 - Simple content access means every enabled repository is available — including ones the fleet
@@ -115,24 +136,41 @@ engineer will link it first.
 
 ## Verify
 
-The commands and, ⛔ **from documentation, not seen**, what they return.
+Per hop, the command and what the run produced ([`lab/phase0.log`](../../lab/phase0.log), unedited
+except the organisation id, account number and consumer UUIDs).
 
-| | Command | Expected (doc) |
+| | Command | Seen |
 |---|---|---|
-| 1 | `subscription-manager status` | `Overall Status: Registered` (RHEL 9+, simple content access) |
-| 1 | `subscription-manager identity` | the org and the consumer UUID — the object the portal and Satellite both track |
-| 2 | `dnf repolist` | the enabled `rhel-9-for-<arch>-baseos-rpms` / `appstream-rpms` |
-| 2 | `dnf updateinfo summary` | counts by `Security`, `Bugfix`, `Enhancement` |
-| 3 | `insights-client --status` | `This host is registered` and the last upload time |
-| 4 | `sos report --batch` | `Your sosreport has been generated and saved in: /var/tmp/sosreport-<host>-<case>-<date>.tar.xz` |
-| 4 | `tar -tf … \| grep -c ''` | thousands of entries; `sos_commands/`, `etc/`, `var/log/` at the top level |
+| 1 | `subscription-manager register --org … --activationkey …` | `The system has been registered with ID: <uuid>` · `The registered system name is: lima-rhel9` |
+| 1 | `subscription-manager status` | `Overall Status: Registered` · `Content Access Mode is set to Simple Content Access. This host has access to content, regardless of subscription status.` |
+| 1 | `subscription-manager repos --list-enabled` | `rhel-9-for-aarch64-baseos-rpms` and `-appstream-rpms`, both `Enabled: 1` — the key's *Latest release* workload, nothing else |
+| 2 | `dnf repolist` | the same two, named `Red Hat Enterprise Linux 9 for ARM 64 - BaseOS / AppStream (RPMs)` |
+| 2 | `dnf updateinfo summary` | on the 9.8 image as shipped: **93 security notices** (1 Critical, 56 Important, 31 Moderate, 5 Low), 37 bugfix |
+| 2 | `dnf updateinfo list --security` | `RHSA-2026:58572 Moderate/Sec. NetworkManager-1:1.54.3-5.el9_8.aarch64` — an advisory with a name, which is the thing the subscription buys |
+| 3 | `insights-client --register` | `Successfully registered host lima-rhel9` · `Successfully uploaded report from lima-rhel9 to account <account>` |
+| 3 | `insights-client --status`, **120 s later** | `System is registered locally via .registered file` · `Insights API confirms registration` |
+| 3 | `ls /etc/insights-client/` | `cert-api.access.redhat.com.pem  insights-client.conf  insights-client.motd  machine-id` |
+| 4 | `sos report --batch --case-id LAB-0001` | `sosreport-lima-rhel9-LAB-0001-2026-09-15-psybidh.tar.xz`, **11 MB, 10,476 entries**, sha256 printed by `sos` |
+| 4 | `tar -tf … \| awk -F/ '{print $2}' \| sort -u` | `boot date df dmidecode environment etc free hostname installed-rpms ip_addr ip_route …` — the top level is a mix of directories and symlinks into `sos_commands/` |
+| 4 | `tar -xOf … '*/sos_commands/host/hostname'` | `lima-rhel9` — the hostname is in the bundle, as are the addresses; the `ip_addr` at the top level is a symlink, which is why counting `inet` lines through it returned 0 |
+| 5 | `uname -r` | `5.14.0-687.5.3.el9_8.aarch64` |
 
 ## Acceptance
 
 🔴 **A host that can name its entitlement, its errata and its own diagnostic bundle without a
 person remembering anything.** `subscription-manager identity` answers the first, `dnf
-updateinfo` the second, `sos report` the third. ⛔ Not run here; the tier that runs it is one
-free account away and is named in [docs/02](../../docs/02-lab-tiers.md).
+updateinfo` the second, `sos report` the third.
+
+```
+Overall Status: Registered
+93 Security notice(s) · RHSA-2026:58572 Moderate/Sec. NetworkManager-1:1.54.3-5.el9_8.aarch64
+sosreport-lima-rhel9-LAB-0001-2026-09-15-psybidh.tar.xz · 11M · 10476 entries
+Insights API confirms registration.
+```
+
+✅ Met, on one VM, one afternoon, one developer subscription. ⛔ Not claimed: a case actually
+opened, Insights' advisor or compliance results read back (a policy was not assigned), a fleet
+key with system purpose set, a disconnected host, a Satellite-registered host, any scale.
 
 ## Rollback
 

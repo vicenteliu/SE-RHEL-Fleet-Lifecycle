@@ -16,9 +16,9 @@ provisioning through Foreman (phase 3), the product half of content management (
 automation controller (phase 5 — AWX needs a Kubernetes cluster, ⛔ by cost on this tier) and the
 platform (phase 6) are specified to the point where a reader with the mid tier can run them, and
 the tier is named in docs/02. Buying a machine to close a marker is the wrong order of
-operations. The exception is **phase 0**: the subscription and support workflow runs on aarch64
-and needs only a free developer account; it is ⛔ because the account did not exist on the day
-the repository was written, and it is first in TODO.md for that reason. Phase 1's Image Builder
+operations. Phase 0 was ⛔ for a few hours on the day the repository was written — the
+subscription and support workflow runs on aarch64 and needs only a free developer account, which
+did not exist that morning and did that afternoon; it is 🔨 lab now. Phase 1's Image Builder
 path and phase 4's OpenSCAP scan are ⛔ the same way: runnable here, not yet run, next.
 
 ## 🔨 lab — the difference from 🔨

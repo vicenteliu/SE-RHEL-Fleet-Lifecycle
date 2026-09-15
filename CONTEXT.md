@@ -79,8 +79,8 @@ _Avoid_: "environment," "setup," "tier" (unqualified)
 **Specced-Not-Run** (⛔):
 Work carrying a complete environment specification, step-by-step verification and acceptance
 criteria, deliberately **not executed**, with the reason stated. Distinct from 🧭, which is
-doc-checked with no plan to execute. In this repository most ⛔ hops have one reason (x86_64)
-and phase 0 has another (no account yet), and each page says which (ADR-0001).
+doc-checked with no plan to execute. In this repository most ⛔ hops have one reason (x86_64),
+and each page says which (ADR-0001).
 _Avoid_: "planned," "TODO," "future work," "not done"
 
 **Acceptance**:

@@ -1,0 +1,12 @@
+# Lima template — the minimum tier for phase 0: a RHEL 9 aarch64 VM from the KVM Guest Image.
+# The image is not redistributable; download it yourself from the Customer Portal
+# (Downloads → Red Hat Enterprise Linux for ARM 64 → KVM Guest Image) into ~/.lima/_images/.
+# A developer subscription (free) is enough. Then:
+#   limactl start --name rhel9 --cpus 2 --memory 4 --disk 20 --tty=false lab/rhel-lab.yaml
+minimumLimaVersion: 2.0.0
+images:
+- location: "~/.lima/_images/rhel-9.8-aarch64-kvm.qcow2"
+  arch: "aarch64"
+  digest: "sha256:5f9d524f9bb42e02eea24842c3ba621355515b1ce0a4fe6aa729c33706a5f384"
+base:
+- template:_default/mounts

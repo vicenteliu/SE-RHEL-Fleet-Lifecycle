@@ -27,11 +27,12 @@ acceptance, rollback, escape hatch), so that a reader with the right tier can ac
 
 ## What actually remains — in this order
 
-### 3. Phase 0 — register the tier  ← **next hop; needs one thing from the author**
+### 3. ✅ Phase 0 — register the tier — **run 2026-09-15, the same afternoon**
 
-A Red Hat Developer Subscription (free) and a RHEL 9 or 10 aarch64 image in Lima. Then phase 0's
-verification table gets *seen* values instead of *doc* ones: `subscription-manager`,
-`insights-client`, `sos report`. This is the only hop blocked on something other than time.
+A developer subscription, the RHEL 9.8 aarch64 KVM Guest Image under Lima (`lab/rhel-lab.yaml`),
+an activation key. Phase 0's verification table has *seen* values; two findings (the
+`insights-client --status` race after `--register`; `subscription-manager` needing root even to
+read). `lab/phase0.sh`, `lab/phase0.log`.
 
 ### 4. Phase 1 — Image Builder on the tier
 
