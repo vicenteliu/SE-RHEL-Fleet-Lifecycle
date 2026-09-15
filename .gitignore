@@ -1,0 +1,7 @@
+.DS_Store
+*.swp
+*.log
+# never: rehearsal recordings, private notes, anything derived from the private workspace
+recordings/
+*.private.md
+_private/

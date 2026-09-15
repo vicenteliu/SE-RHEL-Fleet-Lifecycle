@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updates>
+  <update from="lab" status="stable" type="security" version="1">
+    <id>LAB-2026:0001</id>
+    <title>lab-hello security update</title>
+    <severity>Moderate</severity>
+    <issued date="2026-09-15 00:00:00"/>
+    <updated date="2026-09-15 00:00:00"/>
+    <description>A made-up flaw in lab-hello 1.0, fixed in 1.1. Exists so the errata path can be verified end to end.</description>
+    <pkglist>
+      <collection short="lab-tools">
+        <name>lab-tools</name>
+        <package arch="noarch" name="lab-hello" release="1.el9" version="1.1" src="lab-hello-1.1-1.el9.src.rpm">
+          <filename>lab-hello-1.1-1.el9.noarch.rpm</filename>
+        </package>
+      </collection>
+    </pkglist>
+  </update>
+</updates>
