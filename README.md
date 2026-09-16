@@ -30,6 +30,7 @@ to be asked and the one preparing to ask.
 | **five minutes** | the [footing table](#where-the-author-stands) below, then [the chain](#the-chain), then [phase 2](phases/2-content-lifecycle/) — the model rebuilt by hand, with two findings |
 | **fifteen** | [product vs upstream](docs/01-product-vs-upstream.md) — six services, one pattern, no prices; then [phase 0](phases/0-subscription-and-support/) — what "supported" means in commands, run |
 | **a fleet to run** | the runbooks in order, [0](phases/0-subscription-and-support/) → [7](phases/7-satellite-operations/); [docs/02](docs/02-lab-tiers.md) first if you want to run any of it |
+| **a fleet you did not build** | [docs/03](docs/03-inheriting-a-fleet.md) — the verification rows in arrival order, twenty of them, each with the decision its answer forces |
 | **an interview next week** | [docs/04](docs/04-what-an-interviewer-asks.md) — the questions per hop, what a good answer contains, where the evidence is |
 | **a model you want to hand part of this to** | [AGENT_BOUNDARY.md](AGENT_BOUNDARY.md) — per responsibility, what a person decides and what a model executes |
 | **someone to explain it to** | [EXPLAIN.md](EXPLAIN.md) — the same chain with zero jargon |
@@ -139,10 +140,11 @@ says which one it is.
 | [`docs/00-the-chain.md`](docs/00-the-chain.md) | The spine — every hop, product and upstream, and what the next one assumes about it |
 | [`docs/01-product-vs-upstream.md`](docs/01-product-vs-upstream.md) | Six services: product, counterpart, what the subscription adds, what differs, what you lose without a contract, when the counterpart is right |
 | [`docs/02-lab-tiers.md`](docs/02-lab-tiers.md) | Three tiers, defined by **the hop each one cannot verify**; why this tier is aarch64 and what an x86_64 machine would move |
+| [`docs/03-inheriting-a-fleet.md`](docs/03-inheriting-a-fleet.md) | The verification rows re-ordered for arrival at an estate you did not build — what `prod` is serving first, whether the server can come back second — each with the decision the answer forces |
 | [`docs/04-what-an-interviewer-asks.md`](docs/04-what-an-interviewer-asks.md) | Per hop: the questions, what a good answer contains, the mistake, where the evidence is |
 | [`docs/adr/`](docs/adr/) | Decisions that would otherwise look arbitrary |
 | [`phases/`](phases/) | One runbook per phase |
-| [`lab/`](lab/) | `phase0.sh`, `phase1.sh` + `phase1-check.sh`, `phase2.sh`, `phase4.sh` and their logs; the tailoring file; the blueprint; the Lima templates for the RHEL image and for booting a built image; the spec file and the erratum — what ran, byte for byte; `agent-runs/` and `check_secrets.sh` for the ledger |
+| [`lab/`](lab/) | `phase0.sh`, `phase1.sh` + `phase1-check.sh`, `phase2.sh`, `phase4.sh`, `phase5.sh` and their logs; `ansible/` — the control node's inventory, the two playbooks and the state they read back; the tailoring file; the blueprint; the Lima templates for the RHEL image and for booting a built image; the spec file and the erratum — what ran, byte for byte; `agent-runs/` and `check_secrets.sh` for the ledger |
 | [`AGENT_BOUNDARY.md`](AGENT_BOUNDARY.md) | The ledger: where a model acts and where a person decides, a dated model line per row tried |
 | [`EXPLAIN.md`](EXPLAIN.md) | The same chain with zero jargon — and a stated test for whether it worked |
 | [`DISCLOSURE.md`](DISCLOSURE.md) | What this repository deliberately does not contain |

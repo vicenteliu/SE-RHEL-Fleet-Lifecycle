@@ -78,9 +78,12 @@ Foreman + Katello on one x86_64 machine, with the Rocky VM as its client: phases
 half) and 3 from ⛔ to 🔨 lab; AWX on a single-node cluster for phase 5. Not bought for the
 marker; recorded so the price of each is known.
 
-### 9. `docs/03-inheriting-a-fleet.md`
+### 9. ✅ `docs/03-inheriting-a-fleet.md` — **written 2026-09-15**
 
 The verification rows re-ordered into the sequence you run them on arrival at a RHEL estate you
 did not build — *which environment is prod pointing at* first, *when did the Capsule last sync*
-second, *when was the backup last restored* third — each with what you decide from the answer.
-Cheap, because every row exists; written after the rows above have seen values.
+second, *when was the backup last restored* third — twenty rows in five passes (day one · the
+hosts · where hosts come from · automation · support, platform, the server), each with the
+answer's shape, the decision it forces, and the phase row it came from. Read from the host, not
+the console, is the third rule, because the runs found the two disagreeing three times. Written
+after every row that could see a value on this tier had one.
