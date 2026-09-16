@@ -87,3 +87,17 @@ hosts · where hosts come from · automation · support, platform, the server), 
 answer's shape, the decision it forces, and the phase row it came from. Read from the host, not
 the console, is the third rule, because the runs found the two disagreeing three times. Written
 after every row that could see a value on this tier had one.
+
+### 10. Phase 4's remediation playbook, run — the 4.5 → 5.1 seam
+
+The 961-task playbook `oscap` generated from the lab host's own results, run through phase 5's
+control node against a host that can be thrown away (a fresh boot of phase 1's image),
+`--check` first, then the scan again: the fail count before and after, and what the playbook
+touched that the policy did not ask for. The row phase 4 left as *"has not run until phase 5's
+controls apply"*.
+
+### 11. Ledger rows 5.1 and 4.2 handed to three models
+
+Through the phase-2 harness pattern (context, task, acceptance, reset, verify): *patch `dev` by
+playbook*, the acceptance requiring `--check` first under the same user as the run and with
+fresh metadata, the two-cache trap unmentioned in the task. 5.3 stays ⛔.
