@@ -7,3 +7,4 @@ recordings/
 _private/
 
 !lab/phase*.log
+lab/ansible/remediation-*.yml

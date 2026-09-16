@@ -8,9 +8,11 @@ Satellite). **Upstream:** `dnf updateinfo` · Ansible · `oscap` with the SCAP S
 same project Satellite ships. **State: 🔨 lab — both halves run on the minimum tier on 2026-09-15: the errata model by hand
 in phase 2, and on the registered RHEL host a CIS Level 1 scan, one rule fixed and re-scanned, a
 tailoring file for one exception, the generated remediation playbook, and one advisory applied by
-its id; every command and its output in [`lab/phase4.log`](../../lab/phase4.log) · 🔨 the patch
-cycle as a daily operation on the author's prior estates, package-version based, not advisory
-based.**
+its id ([`lab/phase4.log`](../../lab/phase4.log)); and the generated remediation playbook then
+*run* through phase 5's control node against a throwaway host, fail 109 → 70 before it aborted and
+locked the host out ([`lab/phase4-remediation.log`](../../lab/phase4-remediation.log)) · 🔨 the
+patch cycle as a daily operation on the author's prior estates, package-version based, not
+advisory based.**
 
 The problem has two halves that get confused. *Patching* is changing what is installed.
 *Compliance* is proving what is installed and configured against a policy someone else wrote.
@@ -76,15 +78,32 @@ feature (which schedules it, collects the results and shows the delta per host).
 per rule, `pass`/`fail`/`notapplicable`, and the tailoring file is where the fleet's agreed
 exceptions live so that the report is about drift, not about policy disagreements.
 
-### Hop 4 — remediation is the same loop
+### Hop 4 — remediation is the same loop, and what it costs to run unattended
 
 `oscap` can emit an Ansible playbook or a bash script for the failed rules (`--remediate`, or the
 SSG's shipped playbooks per profile). It is phase 5's job to run it and phase 1's job to bake the
 result into the next image so that the rule never fails again on a new host.
 
+Run through phase 5's control node against a throwaway host born from phase 1's image
+([`lab/phase4-remediation.sh`](../../lab/phase4-remediation.sh),
+[`lab/phase4-remediation.log`](../../lab/phase4-remediation.log)), the generated playbook did the
+job — fail 109 → 70 in the tasks that ran — and taught three things the word *generate* hides.
+It has no `become:`, so `--check` as the run's user died on the first root file (`/etc/sudoers`)
+and the same `--check` with `--become` passed clean; the generated file assumes `-c local` as
+root and a control node has to supply the privilege. Its `--check` *lied about a mid-run abort*:
+the SSG's firewalld-loopback rule asserts `firewalld` is running and aborts the play if not, and
+that assertion is guarded by `ansible_check_mode or …` — so the dry run reported `failed=0` and
+the real run stopped there, half the rules unapplied. And run to that point it **locked the host
+out**: the *System Accounts Do Not Run a Shell* rule set the login user's shell to `nologin`
+because its UID is 501 — below RHEL's `UID_MIN` of 1000, so the rule read the only login account
+as a system account. On reboot there was no account left to scan with. That is why 4.5 in the
+[ledger](../../AGENT_BOUNDARY.md) presents the playbook for approval and does not run it, and why
+phase 1's job is to bake the fixes into the *next image* rather than remediate live hosts.
+
 ## How the phase fails
 
-Three of these came out of the run.
+Six of these came out of the two runs — three from the scan, three from running the generated
+remediation.
 
 - **The image is not the baseline; the policy is.** A host born from phase 1's blueprint — two
   hardening settings baked, SELinux enforcing, born at today's patch level — fails **109 of the
@@ -105,6 +124,17 @@ Three of these came out of the run.
   regressions are invisible in it.
 - Errata applied and the reboot deferred indefinitely: the running kernel is the old one; the
   advisory is `i` and the host is vulnerable. `needs-restarting -r` is the check.
+- **A generated remediation playbook has no `become:`.** `oscap` writes it for `ansible-playbook
+  -c local` as root; from a control node it needs `--become`, and without it `--check` fails on
+  the first task that writes a root file — a red that is about privilege, not about the host.
+- **`--check` on that playbook does not predict a mid-run abort.** A rule that asserts a service
+  is running guards the assert with `ansible_check_mode or …`; the dry run skips it and reports
+  `failed=0`, the real run hits it and stops with half the rules unapplied. The number `--check`
+  gives you is an upper bound, not a plan.
+- **Run unattended it can lock the host out.** *System Accounts Do Not Run a Shell* set the login
+  user to `nologin` because its UID was below `UID_MIN`; on reboot the host had no login account.
+  Generated remediation is reviewed and staged into the next image (phase 1), not run live — this
+  is the rule the seam exists to teach.
 - A scan run as a non-root user reads half the configuration and passes rules it could not check.
 - Reporting from `updateinfo list` (owed) when the question was *published* (phase 2, finding B).
 
@@ -124,7 +154,11 @@ the errata-by-hand rows are from [phase 2](../2-content-lifecycle/)).
 | 3 | full scan again, untailored | fail **108** — exactly the one rule |
 | 3 | `autotailor --unselect partition_for_tmp` → `--tailoring-file` scan | fail **107** · the rule `notselected` · the tailoring is 614 bytes of XML, one `<select selected="false">` |
 | 4 | `oscap xccdf generate fix --fix-type ansible --profile …` | a playbook of **1,714 tasks** for the whole profile |
-| 4 | `… generate fix --result-id … r1.xml` | **961 tasks** — only what failed on this host |
+| 4 | `… generate fix --result-id … r1.xml` | **961 tasks** — only what failed on this host (950 from the throwaway host in the remediation run) |
+| 4 | the generated playbook: `grep -c '^  become:'` | **0** — `--check` as the run's user dies on `/etc/sudoers`; `--check --become` passes clean |
+| 4 | `ansible-playbook remediation.yml --limit gold1 --become --check` vs the real run: `firewalld service is not active` count | **0 vs 2** — the abort assert is guarded by `ansible_check_mode`; `--check` says `failed=0`, the run fails |
+| 4 | the real run, then a scan | fail **109 → 70** in the tasks before the abort; `firewalld` + `aide` installed, `firewalld.service` enabled |
+| 4 | reboot, `limactl shell gold1 -- whoami` | `This account is currently not available` — the login user (UID 501 < `UID_MIN` 1000) set to `nologin` by *System Accounts Do Not Run a Shell* |
 | — | the artefacts | `r1.html` 3.4 MB (the report a person reads) · `r1.xml` 19 MB (the results a system ingests) · `tailoring.xml` · `remediation.yml` |
 | — | Satellite: the host's *Errata* tab, the environment's applicable count, the compliance report per policy | ⛔ full |
 
@@ -139,10 +173,15 @@ received: i RHSA-2026:58572 Moderate/Sec. NetworkManager-1:1.54.3-5.el9_8.aarch6
 policy:   CIS L1 Server — fail 109 → 108 (one fix) → 107 (one agreed exception, tailored)
 ```
 
-✅ Met on one host, one afternoon. ⛔ Not claimed: a remediation playbook *run* (generated only —
-running 961 tasks on a lab host is phase 5's job and was not done), Satellite's errata screens
-or compliance feature, Insights' compliance report (no policy assigned), remote execution, any
-host that is not the lab VM, a reboot cycle (the advisory applied needed none).
+✅ Met on one host, one afternoon. The remediation playbook was **generated and then run**
+(hop 4, [`lab/phase4-remediation.log`](../../lab/phase4-remediation.log)): 950 tasks from a
+throwaway host's own results, through phase 5's control node, fail 109 → 70 in the tasks that
+ran before the firewalld rule aborted it — and the run locked the host's login account out, which
+is the seam's lesson, not a footnote. ⛔ Not claimed: the remediation carried *to a clean scan*
+(the run aborted and then the host was unreachable — a careful second pass is [TODO 10](../../TODO.md)),
+the fixes baked into the next image version (phase 1), Satellite's errata screens or compliance
+feature, Insights' compliance report (no policy assigned), remote execution, any host beyond the
+two lab VMs and the throwaway.
 
 ## Rollback
 

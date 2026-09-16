@@ -12,3 +12,6 @@ all:
     registered:
       hosts:
         rhel9:         # RHEL 9.8 — phase 0's registered host, phase 1's builder, phase 4's scanned host
+    gold:
+      hosts:
+        gold1:         # RHEL 9.8 — booted from phase 1's image; disposable; the host the remediation playbook ran against

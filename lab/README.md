@@ -15,6 +15,9 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `gold-boot.yaml` | the Lima template that boots a built image with the VM tool's containerd provisioning off |
 | `phase4.sh` | CIS L1 baseline scan → one rule fixed → a tailoring for one exception → the generated playbook → one advisory applied by id → `needs-restarting` |
 | `phase4.log` | that run |
+| `phase4-remediation.sh` | phase 4 hop 4 through phase 5: the playbook `oscap` generates from a throwaway host's own results, run from the control node — register → baseline scan → generate → `--check` (no `become`) → `--check --become` → run → scan → reboot. Reads `RH_ORG`/`RH_KEY` from the environment |
+| `phase4-remediation.log` | that run; account name and home path replaced. Ends where it ended: the run aborted on the firewalld rule and the reboot found no login account (UID 501 < `UID_MIN`) |
+| `ansible/inventory.yml` | now has a third group, `gold` — the throwaway host booted from phase 1's image |
 | `tailoring-lab-cis-l1.xml` | the 614-byte tailoring `autotailor` wrote: one rule unselected, profile `lab_cis_l1` extending CIS L1 Server |
 | `phase5.sh` | from the workstation as control node: the inventory pinged → the `dev` host reset to 1.0 with version 2.0 just promoted and its cache not cleared → the same ad-hoc `--check` as the login user and as root → the patch playbook `--check`, real, again → the read-back from outside → state read back from both VMs |
 | `phase5.log` | that run; the account name and home path replaced |

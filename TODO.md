@@ -88,13 +88,24 @@ answer's shape, the decision it forces, and the phase row it came from. Read fro
 the console, is the third rule, because the runs found the two disagreeing three times. Written
 after every row that could see a value on this tier had one.
 
-### 10. Phase 4's remediation playbook, run — the 4.5 → 5.1 seam
+### 10. ✅ Phase 4's remediation playbook, run — the 4.5 → 5.1 seam — **run 2026-09-15**
 
-The 961-task playbook `oscap` generated from the lab host's own results, run through phase 5's
-control node against a host that can be thrown away (a fresh boot of phase 1's image),
-`--check` first, then the scan again: the fail count before and after, and what the playbook
-touched that the policy did not ask for. The row phase 4 left as *"has not run until phase 5's
-controls apply"*.
+The 950-task playbook `oscap` generated from a throwaway host's own results, run through phase 5's
+control node (`lab/phase4-remediation.sh`, `.log`). Three findings: the generated playbook has no
+`become:` (its `--check` fails on `/etc/sudoers` as a non-root user, passes with `--become`); its
+`--check` does not predict a mid-run abort (the firewalld-loopback rule's assert is guarded by
+`ansible_check_mode`, so `--check` said `failed=0` and the real run stopped there, fail 109 → 70);
+and run unattended it **locked the host out** — *System Accounts Do Not Run a Shell* set the login
+user (UID 501 < `UID_MIN` 1000) to `nologin`, and the reboot found no account. That last is why
+phase 1 bakes fixes into the *next image* and 4.5 presents-for-approval rather than runs.
+
+### 10b. The careful second pass — remediation to a clean scan
+
+What an operator does after 10 bit them: a fresh throwaway host, `--skip-tags` for the two rules
+that abort without a running firewall and for the account rule that reads a below-`UID_MIN` login
+user as a system account, run to completion, then make the two decisions the playbook refuses
+(start the firewall; fix the login account by hand), then a scan to the residual fail count and a
+reboot to confirm the host is still a host. The clean end that 10 did not reach.
 
 ### 11. Ledger rows 5.1 and 4.2 handed to three models
 
