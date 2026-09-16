@@ -20,6 +20,7 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `phase2.log` | the output of that run, unedited except the account name (`lab-user`) and the home path (`~`); with an addendum for the two findings verified separately |
 | `lab-hello.spec` | the custom package's spec, as it stood after the second build (version 1.1) |
 | `updateinfo.xml` | the erratum attached to content view version 2.0 |
+| `agent/phase2-rows2.4-2.6/` | the harness for the first ledger rows handed to models: context, two tasks, acceptance, resets, verify |
 | `check_secrets.sh` | refuses a transcript with a key, a token or a private host in it — runs over `agent-runs/` before commit |
 | `agent-runs/` | the evidence behind each 🔨 row in [`AGENT_BOUNDARY.md`](../AGENT_BOUNDARY.md); the record format is in its README |
 

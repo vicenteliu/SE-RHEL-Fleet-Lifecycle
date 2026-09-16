@@ -52,11 +52,14 @@ findings: the image is not the baseline; advisories vs package rows are differen
 326); the tailoring file is the audit artefact. `lab/phase4.sh`, `lab/phase4.log`,
 `lab/tailoring-lab-cis-l1.xml`.
 
-### 6. The first 🔨 ledger rows — 2.4 and 2.6
+### 6. ✅ The first 🔨 ledger rows — 2.4 and 2.6 — **run 2026-09-15**
 
-Promotion and rollback handed to three models on the phase-2 lab. The boundary the run exposed:
-does a model clear the non-root metadata cache on the affected host, or report a rollback that
-the host cannot see? Same harness as the endpoint repository's row 3.3.
+Promotion and rollback handed to three models on the phase-2 lab, the cache trap unmentioned in
+the task (`lab/agent/phase2-rows2.4-2.6/`). Both hosted models PASS on both rows: pointer swapped
+atomically, nothing else touched (fingerprint of `cv/` unchanged), the offer verified with fresh
+metadata (`--refresh`, `clean metadata`, `--repofrompath`) rather than from the warm cache; one
+of them also drew the installed-package line itself and declined a downgrade nobody asked for.
+The local model's result is in the ledger.
 
 ### 7. Phase 5 — playbooks against the tier
 
