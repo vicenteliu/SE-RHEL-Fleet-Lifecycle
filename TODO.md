@@ -61,10 +61,16 @@ metadata (`--refresh`, `clean metadata`, `--repofrompath`) rather than from the 
 of them also drew the installed-package line itself and declined a downgrade nobody asked for.
 The local model's result is in the ledger.
 
-### 7. Phase 5 — playbooks against the tier
+### 7. ✅ Phase 5 — playbooks against the tier — **run 2026-09-15**
 
-The 🔨 half of the phase, reproduced here at lab scale: a patch playbook for the `dev` host,
-`--check` then real, the state read back. Not the controller.
+The 🔨 half of the phase at lab scale, from the workstation as control node (`ansible-core`
+2.21, the two VMs reached through the VM tool's own ssh config): `patch-dev.yml` against phase
+2's `dev` host, `--check` then real (1.0 → 1.1, phase 2's erratum `i` afterwards), again for
+`changed=0`; `state.yml` reading package, pin, owed rows and reboot state from both VMs into
+`lab/ansible/state/`. One finding: the same ad-hoc `--check` as the login user and as root gave
+opposite answers from two metadata caches — the playbook runs under `become` with `update_cache`
+so its dry run and its change read the same data. Not the controller. `lab/phase5.sh`,
+`lab/phase5.log`, `lab/ansible/`.
 
 ### 8. The mid tier, if it is ever bought
 

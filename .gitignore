@@ -5,3 +5,5 @@
 recordings/
 *.private.md
 _private/
+
+!lab/phase*.log

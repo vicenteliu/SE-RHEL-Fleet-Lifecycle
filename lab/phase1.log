@@ -1,0 +1,61 @@
+
+===== 0 · the builder =====
+  osbuild-composer-165.1-4.el9_8.1.aarch64
+  osbuild-174-1.el9.aarch64
+  weldr-client-35.12-4.el9_6.aarch64
+  API server status:
+      Database version:   0
+      Database supported: true
+      Schema version:     0
+      API version:        1
+      Backend:            osbuild-composer
+      Build:              NEVRA:osbuild-composer-165.1-4.el9_8.1.aarch64
+  sources (entitled, via the subscription):
+    appstream
+    baseos
+
+===== 1 · the blueprint: push, depsolve =====
+  pushed rhel9-base 2026.9.15
+  blueprint: rhel9-base v2026.9.15
+      acl-2.4.0-1.el9_8.aarch64
+      alternatives-1.24-2.el9.aarch64
+      attr-2.6.0-1.el9_8.aarch64
+      zlib-1.2.11-40.el9.aarch64
+  packages depsolved: 249
+
+===== 2 · compose: start, wait =====
+  Compose 74b1075b-5367-4140-81be-3fffbc786c70 added to the queue
+  74b1075b-5367-4140-81be-3fffbc786c70 FINISHED after 139 s
+  74b1075b-5367-4140-81be-3fffbc786c70 FINISHED rhel9-base      2026.9.15 qcow2            10737418240
+  Packages:
+      tmux-
+
+===== 3 · the image =====
+  74b1075b-5367-4140-81be-3fffbc786c70-disk.qcow2
+  1192034304 bytes  74b1075b-5367-4140-81be-3fffbc786c70-disk.qcow2
+  file format: qcow2
+  virtual size: 10 GiB (10737418240 bytes)
+  50472b97df26d3ca2519b7aefbca6a203281fa2494e6dd9f3ac355524e1b8237  74b1075b-5367-4140-81be-3fffbc786c70-disk.qcow2
+  metadata (what went in):
+    74b1075b-5367-4140-81be-3fffbc786c70.json
+  copied to /tmp/out/rhel9-base-2026.9.15.qcow2 for the host to boot
+
+===== boot 1 · Lima with its default containerd provisioning (image: enforcing; host: permissive) =====
+  MISS SELinux enforcing            ← getenforce: Permissive; /etc/selinux/config: SELINUX=enforcing
+  cause: the VM tool's first-boot script ran `setenforce 0` "temporarily, during installing containerd units",
+         its install failed midway, and "Restoring SELinux" never ran (journalctl -b: 0 matches)
+  kernel log 14:07:32: hostname gold-lab (the image's); 14:07:43: lima-gold1 (cloud-init's) — first boot wins
+
+===== boot 2 · Lima with containerd provisioning off (lab/gold-boot.yaml) =====
+===== inside the booted image =====
+  Red Hat Enterprise Linux release 9.8 (Plow) · 5.14.0-687.48.1.el9_8.aarch64 · aarch64
+  ok   image version file
+  ok   package from blueprint
+  ok   agent from blueprint
+  ok   sshd: no password auth
+  ok   sshd: no root login
+  ok   kernel arg from blueprint
+  ok   chronyd enabled
+  ok   SELinux enforcing
+  ok   not registered (birth is not registration)
+  hostname: lima-gold1

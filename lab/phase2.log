@@ -1,0 +1,78 @@
+
+===== 0 · tools and layout =====
+  createrepo_c-0.20.1-4.el9.aarch64
+  rpm-build-4.16.1.3-40.el9.aarch64
+  rpmdevtools-9.5-1.el9.noarch
+  dnf-plugins-core-4.3.0-26.el9.noarch
+
+===== 1 · library: sync one upstream repository (extras — small on purpose) =====
+  packages in library/extras: 59
+
+===== 2 · a custom product: lab-hello 1.0, from a spec file =====
+  Wrote: ~/rpmbuild/RPMS/noarch/lab-hello-1.0-1.el9.noarch.rpm
+  Name        : lab-hello
+  Version     : 1.0
+  Release     : 1.el9
+  Architecture: noarch
+
+===== 3 · publish content view cv-base version 1.0 (snapshot of the library, hardlinked) =====
+  published cv-base 1.0: 60 packages
+
+===== 4 · lifecycle environments: dev and prod both point at 1.0 =====
+  total 0
+  lrwxrwxrwx. 1 lab-user lab-user 27 Sep 15 03:07 dev -> /srv/content/cv/cv-base/1.0
+  lrwxrwxrwx. 1 lab-user lab-user 27 Sep 15 03:07 prod -> /srv/content/cv/cv-base/1.0
+
+===== 5 · serve the environments over HTTP; the host is pinned to an environment by its .repo =====
+  GET /dev/lab-tools/repodata/repomd.xml -> 200
+  host pinned to: prod
+  installed from prod: lab-hello 1.0
+
+===== 6 · a new build, an erratum, content view version 2.0 =====
+  Wrote: ~/rpmbuild/RPMS/noarch/lab-hello-1.1-1.el9.noarch.rpm
+  published cv-base 2.0: 61 packages
+  erratum LAB-2026:0001 attached to cv-base 2.0
+
+===== 7 · promote 2.0 to dev only; prod stays on 1.0 =====
+  total 0
+  lrwxrwxrwx. 1 lab-user lab-user 27 Sep 15 03:07 dev -> /srv/content/cv/cv-base/2.0
+  lrwxrwxrwx. 1 lab-user lab-user 27 Sep 15 03:07 prod -> /srv/content/cv/cv-base/1.0
+  what a prod-pinned host sees:
+    lab-hello-0:1.0-1.el9.noarch
+  host pinned to: dev
+  what a dev-pinned host sees:
+    lab-hello-0:1.0-1.el9.noarch
+    lab-hello-0:1.1-1.el9.noarch
+    errata: LAB-2026:0001 Moderate/Sec. lab-hello-1.1-1.el9.noarch
+  after dnf update on dev: lab-hello 1.1
+
+===== 8 · promote 2.0 to prod, then roll prod back to 1.0 =====
+  host pinned to: prod
+  prod rolled back to 1.0 — one symlink:
+    lrwxrwxrwx. 1 lab-user lab-user 27 Sep 15 03:07 /srv/content/env/prod -> /srv/content/cv/cv-base/1.0
+    prod offers: lab-hello-0:1.0-1.el9.noarch
+    prod offers: lab-hello-0:1.1-1.el9.noarch
+  the installed host keeps 1.1 (a rollback changes what is offered, not what is installed):
+    lab-hello 1.1
+
+===== 9 · the audit question: why is this host on this version? =====
+  environment -> content view version:
+    prod -> /srv/content/cv/cv-base/1.0
+    dev  -> /srv/content/cv/cv-base/2.0
+  content view versions on disk:
+    1.0
+    2.0
+  disk cost of two versions (hardlinks):
+    3.4M	/srv/content/library
+    124K	/srv/content/cv/cv-base/1.0
+    128K	/srv/content/cv/cv-base/2.0
+
+===== addendum · the two things step 8 exposed, verified separately (same VM, same afternoon) =====
+== finding A: rollback invisible until the host metadata cache is cleared
+/var/tmp/dnf-<user>-3ei0trl1
+  prod offers after user-cache clean: lab-hello-0:1.0-1.el9.noarch
+== finding B: updateinfo list is relative to what is installed
+lab-hello-1.1-1.el9.noarch
+  prod->2.0, host has 1.1 installed:
+    --all: i LAB-2026:0001 Moderate/Sec. lab-hello-1.1-1.el9.noarch
+  prod back on 1.0

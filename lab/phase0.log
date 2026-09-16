@@ -1,0 +1,86 @@
+
+===== 0 · what this host is =====
+Red Hat Enterprise Linux release 9.8 (Plow)
+aarch64
+  server type: This system is currently not registered.
+  subscription management server: 4.7.5-1
+  subscription management rules: 5.44
+  subscription-manager: 1.29.50-1.el9
+  registered before we start?
+    This system is not yet registered. Try 'subscription-manager register --help' for more information.
+
+===== 1 · register with an activation key (the fleet path; no password touches the host) =====
+  The system has been registered with ID: <uuid>
+  The registered system name is: lima-rhel9
+  +-------------------------------------------+
+     System Status Details
+  +-------------------------------------------+
+  Overall Status: Registered
+  Content Access Mode is set to Simple Content Access. This host has access to content, regardless of subscription status.
+  
+  system identity: <uuid>
+  name: lima-rhel9
+  org name: <org-id>
+  org ID: <org-id>
+  repositories the key enabled:
+    Repo ID:   rhel-9-for-aarch64-appstream-rpms
+    Enabled:   1
+    Repo ID:   rhel-9-for-aarch64-baseos-rpms
+    Enabled:   1
+
+===== 2 · entitled content: the CDN, and errata as advisories =====
+  repo id                           repo name
+  rhel-9-for-aarch64-appstream-rpms Red Hat Enterprise Linux 9 for ARM 64 - AppStream (RPMs)
+  rhel-9-for-aarch64-baseos-rpms    Red Hat Enterprise Linux 9 for ARM 64 - BaseOS (RPMs)
+  advisories applicable to this image, by type:
+    Updates Information Summary: available
+        93 Security notice(s)
+             1 Critical Security notice(s)
+            56 Important Security notice(s)
+            31 Moderate Security notice(s)
+             5 Low Security notice(s)
+        35 Bugfix notice(s)
+  one security advisory, named:
+    RHSA-2026:58572 Moderate/Sec.  NetworkManager-1:1.54.3-5.el9_8.aarch64
+    RHSA-2026:58572 Moderate/Sec.  NetworkManager-libnm-1:1.54.3-5.el9_8.aarch64
+    RHSA-2026:58572 Moderate/Sec.  NetworkManager-team-1:1.54.3-5.el9_8.aarch64
+
+===== 3 · Insights: what leaves the host, and what comes back =====
+  insights-client installed
+  Successfully registered host lima-rhel9
+  Automatic scheduling for Insights has been enabled.
+  Starting to collect Insights data for lima-rhel9
+  Writing RHSM facts to /etc/rhsm/facts/insights-client.facts ...
+  Uploading Insights data.
+  Successfully uploaded report from lima-rhel9 to account <account>.
+  (waiting 120 s before --status: the inventory has not processed the upload yet, and a
+   --status run too early reports NOT registered and removes the local registration — seen on the first run)
+  System is registered locally via .registered file. Registered at 2026-09-15T04:29:31.646613
+  Insights API confirms registration.
+  the collection is defined here (what is uploaded):
+    cert-api.access.redhat.com.pem
+    insights-client.conf
+    insights-client.motd
+    machine-id
+
+===== 4 · sos report: the first attachment on any case =====
+  sos installed: sos-4.11.2-4.el9_8.noarch
+  Your sos report has been generated and saved in:
+   sha256	22033e8da5852e7d807e6b090cfd02afdae282661061414362694e9c5f75c06e
+  archive: sosreport-lima-rhel9-LAB-0001-2026-09-15-psybidh.tar.xz · 11M
+  entries: 10476  · top level:
+ boot date df dmidecode environment etc free hostname installed-rpms ip_addr ip_route 
+  a thing a person checks before sending — hostnames and IPs are in it:
+    sos_commands/host/hostname: lima-rhel9
+  and every interface address:
+    inet lines in ip_addr: 0
+
+===== 5 · what a case would carry (no case is opened here) =====
+  version:  Red Hat Enterprise Linux release 9.8 (Plow)
+  kernel:   5.14.0-687.5.3.el9_8.aarch64
+  identity: <uuid>
+  bundle:   sosreport-lima-rhel9-LAB-0001-2026-09-15-psybidh.tar.xz
+  severity: chosen by business impact, not by the person's anxiety; a lab is Sev 4
+
+===== 6 · leave the tier registered for the next hops; how to unregister is in the runbook =====
+  Overall Status: Registered

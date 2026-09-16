@@ -1,0 +1,78 @@
+
+===== 0 · the scanner and the content =====
+  openscap-scanner-1.3.14-1.el9_8.aarch64
+  openscap-utils-1.3.14-1.el9_8.aarch64
+  scap-security-guide-0.1.82-2.el9_8.noarch
+  profiles in the datastream: 20
+    xccdf_org.ssgproject.content_profile_cis:CIS Red Hat Enterprise Linux 9 Benchmark for Level 2 - Server
+    xccdf_org.ssgproject.content_profile_cis_server_l1:CIS Red Hat Enterprise Linux 9 Benchmark for Level 1 - Server
+    xccdf_org.ssgproject.content_profile_cis_workstation_l1:CIS Red Hat Enterprise Linux 9 Benchmark for Level 1 - Workstation
+    xccdf_org.ssgproject.content_profile_cis_workstation_l2:CIS Red Hat Enterprise Linux 9 Benchmark for Level 2 - Workstation
+
+===== 1 · baseline scan: CIS Level 1 Server, as the host stands after phases 0 and 1 =====
+  oscap exit 2  (0 = all pass, 2 = at least one fail)
+  fail           109
+  notapplicable  35
+  notselected    1245
+  pass           151
+  a few of the failing rules:
+    package_aide_installed
+    aide_build_database
+    aide_check_audit_tools
+    aide_periodic_cron_checking
+    configure_custom_crypto_policy_cis
+    partition_for_tmp
+    sudo_add_use_pty
+    sudo_custom_logfile
+
+===== 2 · one rule, fixed and re-scanned =====
+  before: fail
+  wrote /etc/ssh/sshd_config.d/40-cis.conf: MaxAuthTries 4
+  after:  pass
+
+===== 3 · a tailoring file: one agreed exception, so the report is about drift =====
+  the exception: xccdf_org.ssgproject.content_rule_partition_for_tmp — a single-disk lab VM has no separate /tmp partition, and the fleet standard for this tier says so
+  in the baseline scan: fail
+  select elements in tailoring.xml: 1
+  full scan again, untailored (step 2's fix is the only change since the baseline):
+  fail           108
+  notapplicable  35
+  notselected    1245
+  pass           152
+  full scan, tailored:
+  fail           107
+  notapplicable  35
+  notselected    1246
+  pass           152
+  the exception now: notselected
+
+===== 4 · remediation is the same loop: the playbook the scan generates =====
+  tasks in the generated playbook: 1714
+    var_selinux_policy_name: !!str targeted
+    - name: Gather the package facts
+    - name: Ensure aide is installed
+  from the results instead (only what failed on this host):
+  tasks: 961
+
+===== 5 · the patch half: one advisory, applied by its id =====
+  advisory: RHSA-2026:58572
+  before:   RHSA-2026:58572 Moderate/Sec.  NetworkManager-1:1.54.3-5.el9_8.aarch64
+  applied
+  after:  i RHSA-2026:58572 Moderate/Sec.  NetworkManager-1:1.54.3-5.el9_8.aarch64  (i = installed)
+  security advisories still applicable: 326 before → 322 after
+  needs-restarting -r exit 0  (0 = no reboot needed, 1 = reboot needed)
+    Updating Subscription Management repositories.
+    No core libraries or services have been updated since boot-up.
+    Reboot should not be necessary.
+
+===== 6 · what an auditor gets: the report, the results, the tailoring, the playbook =====
+  155 bytes  .
+  4096 bytes  ..
+  3478721 bytes  r1.html
+  19495828 bytes  r1.xml
+  19434681 bytes  r2.xml
+  19495645 bytes  r3.xml
+  19495828 bytes  r3a.xml
+  565978 bytes  remediation-this-host.yml
+  1004799 bytes  remediation.yml
+  614 bytes  tailoring.xml

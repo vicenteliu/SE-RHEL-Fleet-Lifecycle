@@ -16,6 +16,9 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `phase4.sh` | CIS L1 baseline scan → one rule fixed → a tailoring for one exception → the generated playbook → one advisory applied by id → `needs-restarting` |
 | `phase4.log` | that run |
 | `tailoring-lab-cis-l1.xml` | the 614-byte tailoring `autotailor` wrote: one rule unselected, profile `lab_cis_l1` extending CIS L1 Server |
+| `phase5.sh` | from the workstation as control node: the inventory pinged → the `dev` host reset to 1.0 with version 2.0 just promoted and its cache not cleared → the same ad-hoc `--check` as the login user and as root → the patch playbook `--check`, real, again → the read-back from outside → state read back from both VMs |
+| `phase5.log` | that run; the account name and home path replaced |
+| `ansible/` | the control node's files: `ansible.cfg`, `inventory.yml` (two Lima VMs, reached through the VM tool's own ssh config), `patch-dev.yml`, `state.yml`, and `state/<host>.txt` as the run left them |
 | `phase2.sh` | library sync → custom RPM → content view versions → environments → a pinned host → an erratum → promotion → rollback |
 | `phase2.log` | the output of that run, unedited except the account name (`lab-user`) and the home path (`~`); with an addendum for the two findings verified separately |
 | `lab-hello.spec` | the custom package's spec, as it stood after the second build (version 1.1) |
@@ -40,6 +43,14 @@ limactl shell rhel-lab -- bash /tmp/phase2.sh
 `phase2.sh` is idempotent enough to re-run after `rm -rf /srv/content ~/rpmbuild
 /etc/yum.repos.d/lab.repo` and `dnf remove lab-hello`; it is not idempotent on top of itself.
 It leaves a `python3 -m http.server` on `:8080` serving the environments; kill it when done.
+
+Phase 5's control node is the workstation itself:
+
+```sh
+uv tool install ansible-core        # or pipx; 2.21 was used
+cd lab/ansible && ansible all -m ping
+bash ../phase5.sh                   # resets the dev host to 1.0 first; needs phase 2's layout on rhel-lab
+```
 
 ## What the phase-2 run is, and is not
 

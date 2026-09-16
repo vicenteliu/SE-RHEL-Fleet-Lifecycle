@@ -1,0 +1,7 @@
+host:       rhel-lab · Rocky 9.8 aarch64
+kernel:     5.14.0-687.10.1.el9_8.0.1.aarch64
+lab-hello:  lab-hello-1.1-1.el9.noarch
+pinned to:  dev
+security package rows owed: 208
+reboot:     not needed
+read at:    2026-09-16T02:09:18Z

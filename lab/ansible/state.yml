@@ -1,0 +1,26 @@
+# Read state back from every host into one directory on the control node — one file per host.
+# The scheduled half of the author's prior practice, at lab scale.
+- name: Read state back
+  hosts: all
+  become: true
+  tasks:
+    - name: The package, the pin, what is owed, whether a reboot is pending
+      ansible.builtin.shell: |
+        echo "lab-hello:  $(rpm -q lab-hello)"
+        pin=$(grep -m1 baseurl /etc/yum.repos.d/lab.repo 2>/dev/null | sed 's#.*8080/##; s#/.*##')
+        echo "pinned to:  ${pin:-— (no lab.repo; this host's repositories are the CDN's)}"
+        echo "security package rows owed: $(dnf -q updateinfo list --security 2>/dev/null | grep -c .)"
+        needs-restarting -r >/dev/null 2>&1; echo "reboot:     $([ $? -eq 1 ] && echo needed || echo 'not needed')"
+      register: state
+      changed_when: false
+
+    - name: Write the record on the control node
+      ansible.builtin.copy:
+        dest: "state/{{ inventory_hostname }}.txt"
+        content: |
+          host:       {{ inventory_hostname }} · {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} {{ ansible_facts['architecture'] }}
+          kernel:     {{ ansible_facts['kernel'] }}
+          {{ state.stdout }}
+          read at:    {{ ansible_facts['date_time']['iso8601'] }}
+      delegate_to: localhost
+      become: false

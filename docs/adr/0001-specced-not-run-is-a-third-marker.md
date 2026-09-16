@@ -19,7 +19,7 @@ the tier is named in docs/02. Buying a machine to close a marker is the wrong or
 operations. Phase 0 was ⛔ for a few hours on the day the repository was written — the
 subscription and support workflow runs on aarch64 and needs only a free developer account, which
 did not exist that morning and did that afternoon; it is 🔨 lab now, and phase 1's Image
-Builder path and phase 4's scan followed it the same day.
+Builder path, phase 4's scan and phase 5's playbook half followed it the same day.
 
 ## 🔨 lab — the difference from 🔨
 

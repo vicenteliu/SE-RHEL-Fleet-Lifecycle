@@ -1,0 +1,7 @@
+host:       rhel9 · RedHat 9.8 aarch64
+kernel:     5.14.0-687.5.3.el9_8.aarch64
+lab-hello:  package lab-hello is not installed
+pinned to:  — (no lab.repo; this host's repositories are the CDN's)
+security package rows owed: 322
+reboot:     not needed
+read at:    2026-09-16T02:09:18Z

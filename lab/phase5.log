@@ -1,0 +1,178 @@
+
+===== 0 · the control node and its inventory =====
+  $ ansible --version
+  ansible [core 2.21.4]
+    config file = ~/Workspace/SE-RHEL-Fleet-Lifecycle/lab/ansible/ansible.cfg
+    configured module search path = ['~/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+    ansible python module location = ~/.local/share/uv/tools/ansible-core/lib/python3.12/site-packages/ansible
+    ansible collection location = ~/.ansible/collections:/usr/share/ansible/collections
+    executable location = ~/.local/bin/ansible
+    python version = 3.12.9 (main, Feb 12 2025, 15:09:19) [Clang 19.1.6 ] (~/.local/share/uv/tools/ansible-core/bin/python)
+    jinja version = 3.1.6
+    pyyaml version = 6.0.3 (with libyaml v0.2.5)
+  $ ansible-inventory --graph
+  @all:
+    |--@ungrouped:
+    |--@dev:
+    |  |--rhel-lab
+    |--@registered:
+    |  |--rhel9
+  $ ansible all -m ping
+  rhel-lab | SUCCESS => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: false
+      ping: pong
+  rhel9 | SUCCESS => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: false
+      ping: pong
+
+===== 1 · the state before: phase 2's model, with version 2.0 just promoted to dev and the host's cache not cleared =====
+  env:
+    dev -> /srv/content/cv/cv-base/2.0
+    prod -> /srv/content/cv/cv-base/1.0
+  host pinned to: dev
+  installed: lab-hello-1.0-1.el9.noarch
+  what root's warm cache says the environment offers: lab-hello-0:1.0-1.el9.noarch 
+
+===== 2 · the same ad-hoc question, asked as the login user and as root: two caches, two answers =====
+  $ ansible dev -m ansible.builtin.dnf -a name=* state=latest disablerepo=* enablerepo=lab-* --check
+  rhel-lab | CHANGED => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: true
+      msg: 'Check mode: No changes made, but would have if not in check mode'
+      rc: 0
+      results:
+      - 'Installed: lab-hello-1.1-1.el9.noarch'
+      - 'Removed: lab-hello-1.0-1.el9.noarch'
+  $ ansible dev -m ansible.builtin.dnf -a name=* state=latest disablerepo=* enablerepo=lab-* --check --become
+  rhel-lab | SUCCESS => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: false
+      msg: Nothing to do
+      rc: 0
+      results: []
+
+===== 3 · the playbook, --check: what would change =====
+  $ ansible-playbook patch-dev.yml --check
+  
+  PLAY [Patch dev from its pinned environment] ***********************************
+  
+  TASK [The package the environments differ on, before] **************************
+  ok: [rhel-lab]
+  
+  TASK [Apply what the pinned environment offers — the lab repositories only, with fresh metadata] ***
+  changed: [rhel-lab]
+  
+  TASK [The same package, after] *************************************************
+  ok: [rhel-lab]
+  
+  TASK [Does the change need a reboot to be live] ********************************
+  ok: [rhel-lab]
+  
+  TASK [Report] ******************************************************************
+  ok: [rhel-lab] => 
+      msg: 'rhel-lab: lab-hello-1.0-1.el9.noarch → lab-hello-1.0-1.el9.noarch · reboot not
+          needed'
+  
+  PLAY RECAP *********************************************************************
+  rhel-lab                   : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  
+
+===== 4 · the playbook, for real =====
+  $ ansible-playbook patch-dev.yml
+  
+  PLAY [Patch dev from its pinned environment] ***********************************
+  
+  TASK [The package the environments differ on, before] **************************
+  ok: [rhel-lab]
+  
+  TASK [Apply what the pinned environment offers — the lab repositories only, with fresh metadata] ***
+  changed: [rhel-lab]
+  
+  TASK [The same package, after] *************************************************
+  ok: [rhel-lab]
+  
+  TASK [Does the change need a reboot to be live] ********************************
+  ok: [rhel-lab]
+  
+  TASK [Report] ******************************************************************
+  ok: [rhel-lab] => 
+      msg: 'rhel-lab: lab-hello-1.0-1.el9.noarch → lab-hello-1.1-1.el9.noarch · reboot not
+          needed'
+  
+  PLAY RECAP *********************************************************************
+  rhel-lab                   : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  
+
+===== 5 · read back from outside the playbook: the version on the host, and the erratum =====
+  installed: lab-hello-1.1-1.el9.noarch
+  updateinfo --all, lab repositories: i LAB-2026:0001 Moderate/Sec. lab-hello-1.1-1.el9.noarch  (i = installed)
+
+===== 6 · the playbook again: nothing to do =====
+  $ ansible-playbook patch-dev.yml
+  
+  PLAY [Patch dev from its pinned environment] ***********************************
+  
+  TASK [The package the environments differ on, before] **************************
+  ok: [rhel-lab]
+  
+  TASK [Apply what the pinned environment offers — the lab repositories only, with fresh metadata] ***
+  ok: [rhel-lab]
+  
+  TASK [The same package, after] *************************************************
+  ok: [rhel-lab]
+  
+  TASK [Does the change need a reboot to be live] ********************************
+  ok: [rhel-lab]
+  
+  TASK [Report] ******************************************************************
+  ok: [rhel-lab] => 
+      msg: 'rhel-lab: lab-hello-1.1-1.el9.noarch → lab-hello-1.1-1.el9.noarch · reboot not
+          needed'
+  
+  PLAY RECAP *********************************************************************
+  rhel-lab                   : ok=5    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  
+
+===== 7 · state read back from every host into one directory on the control node =====
+  $ ansible-playbook state.yml
+  
+  PLAY [Read state back] *********************************************************
+  
+  TASK [Gathering Facts] *********************************************************
+  ok: [rhel-lab]
+  ok: [rhel9]
+  
+  TASK [The package, the pin, what is owed, whether a reboot is pending] *********
+  ok: [rhel9]
+  ok: [rhel-lab]
+  
+  TASK [Write the record on the control node] ************************************
+  changed: [rhel-lab -> localhost]
+  changed: [rhel9 -> localhost]
+  
+  PLAY RECAP *********************************************************************
+  rhel-lab                   : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  rhel9                      : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  
+  --- state/rhel-lab.txt
+  host:       rhel-lab · Rocky 9.8 aarch64
+  kernel:     5.14.0-687.10.1.el9_8.0.1.aarch64
+  lab-hello:  lab-hello-1.1-1.el9.noarch
+  pinned to:  dev
+  security package rows owed: 208
+  reboot:     not needed
+  read at:    2026-09-16T02:09:18Z
+  --- state/rhel9.txt
+  host:       rhel9 · RedHat 9.8 aarch64
+  kernel:     5.14.0-687.5.3.el9_8.aarch64
+  lab-hello:  package lab-hello is not installed
+  pinned to:  — (no lab.repo; this host's repositories are the CDN's)
+  security package rows owed: 322
+  reboot:     not needed
+  read at:    2026-09-16T02:09:18Z

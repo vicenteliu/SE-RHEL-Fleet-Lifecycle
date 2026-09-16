@@ -71,6 +71,14 @@ moves as models change and a boundary with no date on it is an opinion.
 | 0.2 | Build the diagnostic bundle for a case | Whether it may leave the host as-is or must be cleaned; which case it attaches to | `sos report` with the case id, the listing of what is in it, the cleaned variant if asked | `sos report --batch --case-id` · `--clean` · `tar -tf` | The archive exists and its listing was shown to the person before anything was sent | | | ⛔ — the *send* is a person's act; the bundle contains configuration and logs | |
 | 0.3 | Open a support case and choose its severity | Always — severity is business impact and is a relationship the fleet has with the vendor | The draft: version, kernel, reproduction, what changed, what was tried, the Knowledgebase search results | the portal's API or a drafted text | A draft that a person edits and submits; the agent never submits | | | ⛔ — severity and submission stay with a person | |
 
+## Phase 5 — automation (run on the minimum tier, the playbook half)
+
+| # | Responsibility | Human decides | Agent executes | How | How you know it worked | Model | Tested on | Status | Run |
+|---|---|---|---|---|---|---|---|---|---|
+| 5.1 | Patch the hosts of an environment by playbook | Which environment, in which window, and whether the hosts may reboot — 4.2's decision, taken once for a group | `--check` first and shown; then the run; the version and `needs-restarting -r` read back in the same play | `ansible-playbook patch-dev.yml --check` · then without · the read-back tasks | The `--check` names the packages; the run's `changed` matches it; the read-back shows the environment's version installed and nothing from outside it; a second run is `changed=0` — and the `--check` ran as the same user as the change, or it read a different cache (the phase-5 run) | | | 🧭 | |
+| 5.2 | Read state back from every host into one record | Which fields are the record — a field that is not in it cannot be asked about later | The run and the files, one per host, each with the time it was read | `ansible-playbook state.yml` | One file per host in the inventory, none missing; the counts in a named unit (4.1) | | | 🧭 | |
+| 5.3 | Choose which hosts a playbook runs against | Always — `hosts:` and `--limit` are the blast radius, and on this tier nothing but the playbook's own line stood between `dev` and every host in the inventory | Running against exactly the group a person named | `hosts: dev` · `--limit` | The play recap lists only the hosts of the named group | | | ⛔ — the agent never widens `hosts:` or drops a `--limit`; a limit left open is the phase's listed failure | |
+
 ---
 
 *Rows are added when a runbook hop is handed to a model for the first time, never ahead of

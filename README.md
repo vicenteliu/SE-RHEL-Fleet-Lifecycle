@@ -57,6 +57,7 @@ Markers, not adjectives. The legend is [below](#honesty-markers); the test behin
 | 🔨 lab | **`subscription-manager`, Insights, `sos`** — [phase 0](phases/0-subscription-and-support/) on a RHEL 9.8 aarch64 VM under a developer subscription: registered with an activation key, entitled content, 93 advisories counted, Insights registered, an 11 MB `sos report` inspected; two things the first run broke on, recorded |
 | 🔨 lab | **Image Builder** — [phase 1](phases/1-gold-image/): one blueprint, 249 packages depsolved against entitled content, a 10 GiB `qcow2` in 139 s, booted, nine checks from inside; the first boot found the VM tool's provisioner had left SELinux permissive |
 | 🔨 lab | **OpenSCAP** — [phase 4](phases/4-patch-errata-compliance/): CIS Level 1 Server on the host phases 0 and 1 built — 109 fail / 151 pass; one rule fixed and re-scanned; a 614-byte tailoring for one exception; the generated remediation playbook (1,714 tasks for the profile, 961 for this host); one RHSA applied by id |
+| 🔨 lab | **A patch playbook against a pinned host** — [phase 5](phases/5-automation/): the workstation as control node, `ansible-core` 2.21, phase 2's `dev` host taken 1.0 → 1.1 by playbook, `--check` then real, `changed=0` on the second run, state read back from both VMs; a `--check` as one user and the change as another read two different metadata caches |
 
 Everything above is stated at the depth the phases state it, and no deeper. The number behind
 *"a couple of hundred"* and the organisations behind the estates are exactly the details
@@ -76,7 +77,7 @@ full table with what each hop assumes about the previous one.
 | 2 | Upstream content → a version hosts are pinned to | Satellite (Katello + Pulp) · Foreman + Katello · Uyuni · **by hand** | **🔨 lab** |
 | 3 | A serial number → an installed, registered host | Satellite provisioning · Foreman, Cobbler, a self-built PXE chain | ⛔ · PXE chain 🔨 (prior) |
 | 4 | Errata → hosts patched, compliance proven | Satellite errata + REX, Insights · `dnf updateinfo`, Ansible, OpenSCAP | **🔨 lab** (errata, one advisory applied, CIS L1 scan + fix + tailoring) |
-| 5 | A playbook → automation with an owner, a record, a permission model | Ansible Automation Platform · AWX, ansible-core | ⛔ · playbooks 🔨 (prior) |
+| 5 | A playbook → automation with an owner, a record, a permission model | Ansible Automation Platform · AWX, ansible-core | **🔨 lab** (the playbook half) · ⛔ controller · playbooks 🔨 (prior) |
 | 6 | Hosts → a platform | RHOSO / RHOSP · OpenStack RDO, DevStack, Kolla; OKD; oVirt | ⛔ |
 | 7 | A Satellite → one that survives its upgrades | `satellite-maintain` · `foreman-maintain` | ⛔ |
 
@@ -95,7 +96,7 @@ produce it; a script appears only where one was run.
 | [2 · content and lifecycle](phases/2-content-lifecycle/) | A content view version is a snapshot with its own metadata; an environment is a pointer; a host is pinned to a pointer and never sees the library. **Run here.** Two findings: a rollback behind the same URL is invisible until the host's metadata cache expires — including the non-root user's own cache; and `updateinfo list` counts what a host is *owed*, not what an environment *published* |
 | [3 · provisioning](phases/3-provisioning/) | The host group decides everything before the box is unpacked; the report-back is what makes a machine that hung a row instead of an absence |
 | [4 · patch, errata, compliance](phases/4-patch-errata-compliance/) | Promote, then apply, per environment — the promotion is the control; and compliance is proven by a scan, not by the patch log. **Run here.** The image is not the baseline, the policy is: a freshly built host fails 109 of 260 CIS L1 rules |
-| [5 · automation](phases/5-automation/) | The controller does not add automation; it adds who, when, with what credential, and a record — and you do not need it until a second team does |
+| [5 · automation](phases/5-automation/) | The controller does not add automation; it adds who, when, with what credential, and a record — and you do not need it until a second team does. **Playbook half run here.** A `--check` that runs as a different user from the change reads a different metadata cache — the dry run and the change must look at the same data |
 | [6 · platform](phases/6-platform/) | A guest is a host: born from the fleet's image, pinned, inventoried, scanned — or it is a second fleet |
 | [7 · Satellite operations](phases/7-satellite-operations/) | The backup is hop 2 and the upgrade is hop 3, never the other way round; a backup that was never restored is a hope |
 

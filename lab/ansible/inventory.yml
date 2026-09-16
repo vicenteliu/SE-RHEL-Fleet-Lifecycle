@@ -1,0 +1,14 @@
+# The lab's inventory: the two VMs under Lima. Static — which the runbook calls the failure
+# mode; on this tier the system of record is the VM tool, and each host's connection is the
+# ssh config that tool writes (~/.lima/<vm>/ssh.config), never a copied key or a password.
+all:
+  vars:
+    ansible_host: "lima-{{ inventory_hostname }}"
+    ansible_ssh_common_args: "-F {{ lookup('env', 'HOME') }}/.lima/{{ inventory_hostname }}/ssh.config"
+  children:
+    dev:
+      hosts:
+        rhel-lab:      # Rocky 9 — phase 2's content server and its one host, pinned to `dev` by /etc/yum.repos.d/lab.repo
+    registered:
+      hosts:
+        rhel9:         # RHEL 9.8 — phase 0's registered host, phase 1's builder, phase 4's scanned host
