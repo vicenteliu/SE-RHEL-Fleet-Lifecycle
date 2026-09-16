@@ -99,13 +99,18 @@ and run unattended it **locked the host out** — *System Accounts Do Not Run a 
 user (UID 501 < `UID_MIN` 1000) to `nologin`, and the reboot found no account. That last is why
 phase 1 bakes fixes into the *next image* and 4.5 presents-for-approval rather than runs.
 
-### 10b. The careful second pass — remediation to a clean scan
+### 10b. ✅ The careful second pass — remediation to a clean scan — **run 2026-09-15**
 
-What an operator does after 10 bit them: a fresh throwaway host, `--skip-tags` for the two rules
-that abort without a running firewall and for the account rule that reads a below-`UID_MIN` login
-user as a system account, run to completion, then make the two decisions the playbook refuses
-(start the firewall; fix the login account by hand), then a scan to the residual fail count and a
-reboot to confirm the host is still a host. The clean end that 10 did not reach.
+A fresh throwaway host; `--skip-tags` for the two firewalld rules that abort without a running
+firewall and for `no_shelllogin_for_systemaccounts` (which reads the UID-501 access account as a
+system account); the held-back run carried to `failed=0`, host reachable — **fail 109 → 12**.
+Then the two decisions the playbook refuses: `systemctl enable --now firewalld` and the two
+loopback rules re-run → **9**, `firewalld_loopback_traffic_restricted` `pass`; and the account
+*excepted* in a 635-byte tailoring rather than set `nologin` → **8**, pass 151 → 253. A reboot:
+still Enforcing, firewalld active, login and sudo intact, `ansible gold -m ping` green. The eight
+residual are the human-decision rules (root/GRUB password, `su` group, nftables-vs-firewall, a
+separate `/tmp`) — phase 1's input. `lab/phase4-remediation-pass2.sh`, `.log`,
+`lab/tailoring-pass2-cis-l1.xml`.
 
 ### 11. Ledger rows 5.1 and 4.2 handed to three models
 

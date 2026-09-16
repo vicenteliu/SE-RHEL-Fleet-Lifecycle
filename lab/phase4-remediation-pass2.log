@@ -1,0 +1,94 @@
+
+===== 0 · a fresh throwaway host, registered, scanner installed =====
+  rhel9-base 2026.9.15
+  Enforcing
+  login: lab-user uid=501 shell=/bin/bash
+  The system has been registered with ID: <uuid>
+  The registered system name is: lima-gold1
+  
+  WARNING
+  
+  The yum/dnf plugins: /etc/dnf/plugins/subscription-manager.conf, /etc/dnf/plugins/product-id.conf were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use "subscription-manager config --rhsm.auto_enable_yum_plugins=0" to block this behavior.
+  
+  scap-security-guide-0.1.82-2.el9_8.noarch
+
+===== 1 · baseline, then the playbook generated from it =====
+  oscap exit 2
+    fail           109
+    notapplicable  35
+    notselected    1245
+    pass           151
+    tasks: 950
+  held-back tags present: lockout=4 fw_loopback=10
+
+===== 2 · the run, with the lock-out rule and the two abort rules held back by tag =====
+  exit 0 · 203 s
+  PLAY RECAP *********************************************************************
+  gold1                      : ok=585  changed=120  unreachable=0    failed=0    skipped=288  rescued=0    ignored=0   
+  
+  'Remediation aborted' occurrences: 0
+
+===== 3 · still reachable, and the residual scan =====
+  $ ansible gold -m ping
+  gold1 | SUCCESS => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: false
+      ping: pong
+  login shell still: /bin/bash
+  oscap exit 2
+    fail           12
+    notapplicable  33
+    notselected    1245
+    pass           250
+    no_shelllogin_for_systemaccounts           fail
+    firewalld_loopback_traffic_restricted      fail
+    service_firewalld_enabled                  fail
+
+===== 4 · decision A — START the firewall (the playbook enables but never starts it), then the two loopback rules =====
+  is-active: active · state: running
+  exit 0 · 10 s
+  PLAY RECAP *********************************************************************
+  gold1                      : ok=14   changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  
+  oscap exit 2
+    fail           9
+    notapplicable  33
+    notselected    1245
+    pass           253
+    firewalld_loopback_traffic_restricted now: pass
+
+===== 5 · decision B — the below-UID_MIN login account: EXCEPT it in a tailoring, do not nologin it =====
+    UID_MIN is 1000; the login account is uid 501 — the rule reads the access account as a system account
+    select elements in the tailoring: 1
+  oscap exit 2
+    fail           8
+    notapplicable  33
+    notselected    1246
+    pass           253
+    no_shelllogin_for_systemaccounts in the tailored scan: notselected
+
+===== 6 · reboot — the host is still a host =====
+  up: 2026-09-15 23:03:07 · Enforcing · firewalld active · login=lab-user
+  sudo without a password: still works
+  $ ansible gold -m ping
+  gold1 | SUCCESS => 
+      ansible_facts:
+          discovered_interpreter_python: /usr/bin/python3.9
+      changed: false
+      ping: pong
+  oscap exit 2
+    fail           8
+    notapplicable  33
+    notselected    1246
+    pass           253
+    still failing after the careful pass (first 12):
+      partition_for_tmp
+      ensure_root_password_configured
+      use_pam_wheel_group_for_su
+      grub2_password
+      ensure_journald_and_rsyslog_not_active_together
+      socket_systemd-journal-remote_disabled
+      service_nftables_disabled
+      sshd_limit_user_access
+  needs-restarting-r-exit 0

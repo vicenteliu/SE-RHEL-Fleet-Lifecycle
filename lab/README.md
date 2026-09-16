@@ -17,6 +17,9 @@ because it was run; there are no scripts here for the ⛔ hops.
 | `phase4.log` | that run |
 | `phase4-remediation.sh` | phase 4 hop 4 through phase 5: the playbook `oscap` generates from a throwaway host's own results, run from the control node — register → baseline scan → generate → `--check` (no `become`) → `--check --become` → run → scan → reboot. Reads `RH_ORG`/`RH_KEY` from the environment |
 | `phase4-remediation.log` | that run; account name and home path replaced. Ends where it ended: the run aborted on the firewalld rule and the reboot found no login account (UID 501 < `UID_MIN`) |
+| `phase4-remediation-pass2.sh` | the careful second pass: the same generated playbook run with the abort and lock-out rules held back by `--skip-tags`, then the firewall started and the account excepted by hand, to a clean scan and a reboot |
+| `phase4-remediation-pass2.log` | that run — fail 109 → 8, pass 151 → 253, the host still reachable |
+| `tailoring-pass2-cis-l1.xml` | the 635-byte tailoring for decision B: `no_shelllogin_for_systemaccounts` unselected, because the control node's access account is UID 501 (below `UID_MIN`) and the rule reads it as a system account |
 | `ansible/inventory.yml` | now has a third group, `gold` — the throwaway host booted from phase 1's image |
 | `tailoring-lab-cis-l1.xml` | the 614-byte tailoring `autotailor` wrote: one rule unselected, profile `lab_cis_l1` extending CIS L1 Server |
 | `phase5.sh` | from the workstation as control node: the inventory pinged → the `dev` host reset to 1.0 with version 2.0 just promoted and its cache not cleared → the same ad-hoc `--check` as the login user and as root → the patch playbook `--check`, real, again → the read-back from outside → state read back from both VMs |

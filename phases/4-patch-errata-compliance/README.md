@@ -177,11 +177,13 @@ policy:   CIS L1 Server — fail 109 → 108 (one fix) → 107 (one agreed excep
 (hop 4, [`lab/phase4-remediation.log`](../../lab/phase4-remediation.log)): 950 tasks from a
 throwaway host's own results, through phase 5's control node, fail 109 → 70 in the tasks that
 ran before the firewalld rule aborted it — and the run locked the host's login account out, which
-is the seam's lesson, not a footnote. ⛔ Not claimed: the remediation carried *to a clean scan*
-(the run aborted and then the host was unreachable — a careful second pass is [TODO 10](../../TODO.md)),
-the fixes baked into the next image version (phase 1), Satellite's errata screens or compliance
-feature, Insights' compliance report (no policy assigned), remote execution, any host beyond the
-two lab VMs and the throwaway.
+is the seam's lesson, not a footnote. The careful second pass then carried it *to a clean scan*
+on a fresh throwaway host — the abort and lock-out rules held back, the firewall started and the
+account excepted by hand — **fail 109 → 8, pass 151 → 253, the host still reachable after a
+reboot** ([`lab/phase4-remediation-pass2.log`](../../lab/phase4-remediation-pass2.log)). ⛔ Not
+claimed: the fixes baked into the next image version (phase 1 — the residual eight are its
+input), Satellite's errata screens or compliance feature, Insights' compliance report (no policy
+assigned), remote execution, any host beyond the two lab VMs and the throwaway.
 
 ## Rollback
 
